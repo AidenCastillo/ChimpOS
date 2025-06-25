@@ -2,17 +2,12 @@
 
 #include "terminal.h"
 #include "keyboard.h"
-
+#include "shell.h"
 void kernel_main(void) 
 {
 	/* Initialize terminal interface */
 	terminal_initialize();
-
-	/* Newline support is left as an exercise. */
-	// terminal_writestring("Hello, ke\033[094mrnel World!WorldWorldWorldWorldWorldWorldWorldWorldWorldWorldWorldWorldWorld\n");
-	// for (int i = 0; i < 22; i++) {
-	// 	terminal_writestring("Hello, kernel World!\n");
-	// }
+	shell_initialize();
 	
 	while (true) {
 		terminal_writestring("user@host:/$ ");
@@ -20,6 +15,7 @@ void kernel_main(void)
 
 		char line[100];
 		read_line(line, 100);
+		shell_process_command(line);
 	}
 
 }
