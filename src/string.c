@@ -44,7 +44,7 @@ char* strtok(char* str, char* reg) {
 	}
 
 	char* token_start = next_token;
-	while (*next_token && !strchr(*next_token, *reg)) {
+	while (*next_token && strchr(reg, *next_token) == NULL) {
 		next_token++;
 	}
 

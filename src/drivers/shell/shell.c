@@ -20,6 +20,8 @@ int shell_register_command(char* name, void (*function)(int argc, char** argv), 
     commands[command_count].name = name;
     commands[command_count].function = function;
     commands[command_count].help = help;
+    command_count++;
+    return 1;
 }
 
 int shell_unregister_command(char* name) {
@@ -47,7 +49,12 @@ static void shell_help(UNUSED int argc, UNUSED char** argv) {
 }
 
 static void shell_echo(int argc, char** argv) {
-    terminal_writestring(argv);
+    for (int i = 1; i < argc; i++) {
+        terminal_writestring(argv[i]);
+        if (i < argc - 1) {
+            terminal_writestring(" ");
+        }
+    }
     terminal_writestring("\n");
 }
 
@@ -61,7 +68,7 @@ void shell_initialize(void) {
 }
 
 
-void parse_command(char* command_line, int* argc, char* argv) {
+void parse_command(char* command_line, int* argc, char** argv) {
     *argc = 0;
     char* token = strtok(command_line, " ");
 
