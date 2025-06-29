@@ -1,6 +1,10 @@
-#include <stddef.h>
-
 #include "string.h"
+
+#include "common.h"
+#include <stddef.h>
+#include <stdbool.h>
+#include <stdint.h>
+
 size_t strlen(const char* str) 
 {
 	size_t len = 0;
@@ -56,4 +60,40 @@ char* strtok(char* str, char* reg) {
 	}
 
 	return token_start;
+}
+
+void itoa(int n, char* str, UNUSED uint32_t base) {
+    int i = 0;
+    
+    // Store the sign but work with positive numbers
+    bool isNegative = (n < 0);
+    uint32_t num = isNegative ? -n : n;
+
+    // Handle 0 explicitly
+    if (num == 0) {
+        str[i++] = '0';
+        str[i] = '\0';
+        return;
+    }
+
+    // Process digits
+    while (num > 0) {
+        str[i++] = (num % 10) + '0';
+        num /= 10;
+    }
+
+    // Add sign if negative
+    if (isNegative) {
+        str[i++] = '-';
+    }
+
+    // Null terminate
+    str[i] = '\0';
+
+    // Reverse the string
+    for (int j = 0; j < i/2; j++) {
+        char temp = str[j];
+        str[j] = str[i-1-j];
+        str[i-1-j] = temp;
+    }
 }

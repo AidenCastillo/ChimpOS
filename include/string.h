@@ -2,9 +2,11 @@
 #define STRING_H
 
 #include <stddef.h>
+#include <stdbool.h>
+#include <stdint.h>
 
 size_t strlen(const char* str);
 int strcmp(char* str1, char* str2);
 char* strtok(char* str, char* reg);
-
+void itoa(int num, char* str, uint32_t base);
 #endif

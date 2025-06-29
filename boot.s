@@ -36,14 +36,6 @@ stack_bottom:
 .skip 16384 # 16 KiB
 stack_top:
 
-# Heap section
-.align 16
-.global heap_start
-heap_start:
-.skip 1048576 # 1 MiB
-.global heap_end
-heap_end:
-
 /*
 The linker script specifies _start as the entry point to the kernel and the
 bootloader will jump to this position once the kernel has been loaded. It

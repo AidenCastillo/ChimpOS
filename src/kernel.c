@@ -9,6 +9,7 @@ void kernel_main(void)
 	/* Initialize terminal interface */
 	heap_initialize();
 	terminal_initialize();
+	heap_initialize();
 	shell_initialize();
 
 	void* ptr = heap_malloc(32);

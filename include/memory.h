@@ -5,7 +5,7 @@
 #include <stddef.h>
 
 void heap_initialize(void);
-void *heap_malloc(size_t size);
+void* heap_malloc(size_t size);
 void heap_free(void *ptr);
 
 #endif
