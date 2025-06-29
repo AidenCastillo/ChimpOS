@@ -8,19 +8,12 @@
 
 void kernel_main(void) 
 {
-	/* Initialize terminal interface */
+	/* Initializations */
 	terminal_initialize();
 	heap_initialize();
 	shell_initialize();
 	test_framework_init();
 
-	void* ptr = heap_malloc(32);
-	if (ptr == NULL) {
-		terminal_writestring("Memory allocation failed!\n");
-	} else {
-		terminal_writestring("Memory allocation succeeded!\n");
-	}
-	
 	while (true) {
 		terminal_writestring("user@host:/$ ");
 		terminal_save_position();
