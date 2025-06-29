@@ -4,13 +4,15 @@
 #include "keyboard.h"
 #include "shell.h"
 #include "memory.h"
+#include "test_framework.h"
+
 void kernel_main(void) 
 {
 	/* Initialize terminal interface */
-	heap_initialize();
 	terminal_initialize();
 	heap_initialize();
 	shell_initialize();
+	test_framework_init();
 
 	void* ptr = heap_malloc(32);
 	if (ptr == NULL) {
