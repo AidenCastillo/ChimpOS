@@ -37,9 +37,9 @@ void add_test_case(test_suite_t* suite, const char* name, const char* desc, bool
 
     if (suite->tests == NULL) {
         suite->tests = heap_malloc(sizeof(test_case_t));
-        suite->test_count++;
         suite->tests[0] = *test;
         heap_free(test);
+        suite->test_count = 1;
     } else {
         test_case_t* new_array = heap_malloc(sizeof(test_case_t) * (suite->test_count + 1));
 
@@ -53,9 +53,9 @@ void add_test_case(test_suite_t* suite, const char* name, const char* desc, bool
         heap_free(test);
 
         suite->tests = new_array;
+        suite->test_count++;    
     }
 
-    suite->test_count;
 }
 
 void register_test_suite(test_suite_t* suite) {
@@ -66,10 +66,12 @@ void register_test_suite(test_suite_t* suite) {
 
 void cmd_run_tests(int argc, char** argv) {
 
+    terminal_writestring("\n");
     terminal_writestring("=== TEST FRAMEWORK ===\n");
 
     run_all_tests();
 
+    terminal_writestring("\n");
     terminal_writestring("=== PASSED: ");
     char buf[32];
     itoa(test_registry.passed, buf, 10);

@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+// Returns the length of a string
 size_t strlen(const char* str) 
 {
 	size_t len = 0;
@@ -13,6 +14,8 @@ size_t strlen(const char* str)
 	return len;
 }
 
+// Returns 0 if both string are equal.
+// Returns -1 otherwise.
 int strcmp(char* str1, char* str2) {
 	if (strlen(str1) != strlen(str2)) {
 		return -1;
@@ -62,6 +65,8 @@ char* strtok(char* str, char* reg) {
 	return token_start;
 }
 
+// Converts int n to a string in certain base
+// TODO: add others bases
 void itoa(int n, char* str, UNUSED uint32_t base) {
     int i = 0;
     

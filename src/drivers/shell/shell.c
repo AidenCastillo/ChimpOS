@@ -75,7 +75,6 @@ void shell_initialize(void) {
     terminal_writestring("Type 'help' for commands\n");
 }
 
-
 void parse_command(char* command_line, int* argc, char** argv) {
     *argc = 0;
     char* token = strtok(command_line, " ");
