@@ -132,3 +132,18 @@ void heap_free(void *ptr) {
         current = current->next;
     }
 }
+
+void memcpy(void *to, void *from, uint32_t numBytes) {
+    uint8_t *dst = (uint8_t *)to;
+    uint8_t *src = (uint8_t *)from;
+    for (uint32_t i = 0; i < numBytes; i++) {
+        dst[i] = src[i];
+    }
+}
+
+void memset(void *ptr, int value, size_t num) {
+    uint8_t *p = (uint8_t *)ptr;
+    for (size_t i = 0; i < num; i++) {
+        p[i] = (uint8_t)value;
+    }
+}
