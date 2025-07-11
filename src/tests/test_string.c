@@ -14,7 +14,7 @@ static bool test_strcmp() {
 
 static bool test_itoa() {
     uint32_t n = 25;
-    char* buf[3];
+    char buf[3];
     itoa(n, buf, 10);
     return (strcmp(buf, "25\0") == 0);
 }

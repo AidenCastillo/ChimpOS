@@ -1,5 +1,6 @@
 #include "test_framework.h"
 #include "terminal.h"
+#include "memory.h"
 #include "string.h"
 
 test_registry_t test_registry;
@@ -28,7 +29,7 @@ test_suite_t* create_test_suite(const char* name) {
     return suite;
 }
 
-void add_test_case(test_suite_t* suite, const char* name, const char* desc, bool(*test_func)) {
+void add_test_case(test_suite_t* suite, const char* name, const char* desc, bool(*test_func)(void)) {
     test_case_t* test = heap_malloc(sizeof(test_case_t));
 
     test->name = name;

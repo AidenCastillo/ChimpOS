@@ -39,7 +39,7 @@ void test_framework_init(void);
 void test_framework_cleanup(void);
 test_suite_t* create_test_suite(const char* name);
 void register_test_suite(test_suite_t* suite);
-void add_test_case(test_suite_t* suite, const char* name, const char* desc, bool (*test_func));
+void add_test_case(test_suite_t* suite, const char* name, const char* desc, bool (*test_func)(void));
 
 void run_test_by_name(const char* suite_name);
 void run_test_suite(test_suite_t* suite);
