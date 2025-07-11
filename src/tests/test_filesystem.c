@@ -92,8 +92,9 @@ static bool test_fs_read(void) {
     }
 
     // Check the contents of the buffer
-    if (strcmp(buffer, "Expected file contents") != 0) {
+    if (strcmp(buffer, "Test data for RAM disk") != 0) {
         terminal_writestring("Read data does not match expected contents\n");
+        terminal_writestring(buffer);
         fs_close(file);
         return false; // Contents do not match
     }
@@ -117,9 +118,18 @@ static bool test_fs_write(void) {
         return false; // Write failed
     }
 
+    char buffer[128];
+    int bytes_read = fs_read(file, buffer, sizeof(buffer));
+    if (bytes_read < 0) {
+        terminal_writestring("Error reading from file\n");
+        fs_close(file);
+        return false; // Read failed
+    }
+
     // Check if the data was written correctly
-    if (strcmp((char*)file->fs_data, test_data) != 0) {
+    if (strcmp(buffer, test_data) != 0) {
         terminal_writestring("Written data does not match expected contents\n");
+        terminal_writestring(buffer);
         fs_close(file);
         return false; // Contents do not match
     }

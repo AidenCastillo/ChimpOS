@@ -15,26 +15,7 @@ void set_fs_type(fs_type_t type) {
     current_fs_type = type;
 }
 
-int ramdisk_read(file_t* file, void* buffer, size_t size) {
-    uint32_t offset = (uint32_t)file->fs_data;
-    if (offset + size > RAMDISK_SIZE) {
-        size = RAMDISK_SIZE - offset;
-    }
 
-    memcpy(buffer, &ramdisk_data[offset], size);
-    return size;
-}
-
-int ramdisk_write(file_t* file, const void* buffer, size_t size) {
-    uint32_t offset = (uint32_t)file->fs_data;
-    if (offset + size > RAMDISK_SIZE) {
-        size = RAMDISK_SIZE - offset; // Prevent overflow
-    }
-
-    memcpy(&ramdisk_data[offset], buffer, size);
-    file->size += size; // Update file size
-    return size;
-}
 
 void fs_init(void) {
     // Set up the function pointers based on filesystem type
@@ -76,6 +57,6 @@ int fs_read(file_t* file, void* buffer, size_t size) {
 }
 
 int fs_write(file_t* file, const void* buffer, size_t size) {
-    return -1;
+    return current_fs_ops->write(file, buffer, size);
 }
 

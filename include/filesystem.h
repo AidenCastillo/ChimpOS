@@ -17,12 +17,12 @@ typedef struct {
 } file_t;
 
 typedef struct {
-    file_t* (*open)(const char* path, int flags);
-    int (*close)(file_t* file);
-    int (*read)(file_t* file, void* buffer, size_t size);
-    int (*write)(file_t* file, const void* buffer, size_t size);
     void (*init)(void);
     void (*format)(void);
+    int (*read)(file_t* file, void* buffer, size_t size);
+    int (*write)(file_t* file, const void* buffer, size_t size);
+    file_t* (*open)(const char* path, int flags);
+    int (*close)(file_t* file);
 } fs_operations_t;
 
 #ifndef RAMDISK_SIZE
