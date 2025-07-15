@@ -17,7 +17,7 @@ void set_fs_type(fs_type_t type) {
 
 
 
-void fs_init(void) {
+int fs_init(void) {
     // Set up the function pointers based on filesystem type
     if (get_fs_type() == FS_TYPE_RAMDISK) {
         current_fs_ops = &ramdisk_fs_ops;
@@ -27,6 +27,8 @@ void fs_init(void) {
     
     // Initialize the selected filesystem
     current_fs_ops->init();
+
+    return 0;
 }
 
 void fs_format(void) {
