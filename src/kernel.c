@@ -28,7 +28,7 @@ void kernel_main(void)
 		if (ran_tests == 0) {
 			shell_process_command("test");
 			ran_tests = 1;
-			LOG_INFO("TESTS RAN");
+			LOG_INFO("TESTS RAN %d", 10);
 		}
 		terminal_writestring("user@host:/$ ");
 		terminal_save_position();
