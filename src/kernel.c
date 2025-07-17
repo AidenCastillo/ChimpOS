@@ -29,6 +29,7 @@ void kernel_main(void)
 			shell_process_command("test");
 			ran_tests = 1;
 			LOG_INFO("TESTS RAN %d", 10);
+			LOG_INFO("TEST STRING: %s", "passed");
 		}
 		terminal_writestring("user@host:/$ ");
 		terminal_save_position();

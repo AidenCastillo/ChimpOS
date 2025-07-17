@@ -29,6 +29,15 @@ void debug_log(log_level_t level, const char* file, int line, const char* fmt, .
         if (*p == '\0') break;
 
         switch(*p) {
+            case 's': {
+                const char* s = va_arg(args, const char*);
+                if (s) {
+                    terminal_writestring(s);
+                } else {
+                    terminal_writestring("(NULL)");
+                }
+                break;
+            }
             case 'd': {
                 const char s[32];
                 itoa(va_arg(args, int*), s, 10);
