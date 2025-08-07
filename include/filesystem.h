@@ -33,7 +33,7 @@ extern uint8_t ramdisk_data[RAMDISK_SIZE];
 
 int ramdisk_read(file_t* file, void* buffer, size_t size);
 int ramdisk_write(file_t* file, const void* buffer, size_t size);
-void fs_init(void);
+int fs_init(void);
 void fs_format(void);
 void fs_mount(void);
 

@@ -6,12 +6,18 @@
 #include "shell.h"
 #include "memory.h"
 #include "test_framework.h"
+#include "debug.h"
 
 void kernel_main(void) 
 {
 	/* Initializations */
 	terminal_initialize();
-	fs_init();
+	debug_init();
+
+	if (fs_init()) {
+		LOG_ERROR("Filesystem initialization failed");
+	}
+	
 	heap_initialize();
 	shell_initialize();
 	test_framework_init();
@@ -22,6 +28,8 @@ void kernel_main(void)
 		if (ran_tests == 0) {
 			shell_process_command("test");
 			ran_tests = 1;
+			LOG_INFO("TESTS RAN %d", 10);
+			LOG_INFO("TEST STRING: %s", "passed");
 		}
 		terminal_writestring("user@host:/$ ");
 		terminal_save_position();
