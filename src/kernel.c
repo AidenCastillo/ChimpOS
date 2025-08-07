@@ -7,10 +7,22 @@
 #include "memory.h"
 #include "test_framework.h"
 #include "debug.h"
+#include "process.h"
+
+void test_function(void) {
+	terminal_writestring("Test function running in a new process.\n");
+}
 
 void kernel_main(void) 
 {
 	/* Initializations */
+	process_t* current_process = process_init();
+	terminal_writestring("Kernel initializing...\n");
+
+	process_t* child_process = process_create_on_node(current_process, 0, test_function);
+
+	process_wake(child_process);
+
 	terminal_initialize();
 	debug_init();
 
@@ -22,7 +34,7 @@ void kernel_main(void)
 	shell_initialize();
 	test_framework_init();
 
-	int ran_tests = 0;
+	int ran_tests = 1;
 
 	while (true) {
 		if (ran_tests == 0) {

@@ -24,8 +24,12 @@ ISO_DIR := $(BUILD_DIR)/iso
 GRUB_DIR := $(ISO_DIR)/boot/grub
 
 # Find all C files recursively
-C_SOURCES := $(shell find $(SRC_DIR) -name '*.c')
+C_SOURCES := $(wildcard $(SRC_DIR)/*.c) $(wildcard $(SRC_DIR)/*/*.c) $(wildcard $(SRC_DIR)/*/*/*.c)
 C_OBJECTS := $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(C_SOURCES))
+
+# Find all assembly files recursively
+ASM_SOURCES := $(wildcard $(SRC_DIR)/*.s) $(wildcard $(SRC_DIR)/*/*.s) $(wildcard $(SRC_DIR)/*/*/*.s)
+ASM_OBJECTS := $(patsubst $(SRC_DIR)/%.s,$(BUILD_DIR)/%.o,$(ASM_SOURCES))
 
 # Kernel output
 KERNEL = kernel.bin
@@ -43,9 +47,13 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) $< -o $@
 
+# Compile assembly files
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.s
+	$(AS) $(ASFLAGS) $< -o $@
+
 # Link everything
-$(KERNEL): $(BUILD_DIR)/boot.o $(C_OBJECTS)
-	$(LD) -T linker.ld -o $(KERNEL) $(LDFLAGS) $(BUILD_DIR)/boot.o $(C_OBJECTS) -lgcc
+$(KERNEL): $(BUILD_DIR)/boot.o $(C_OBJECTS) $(ASM_OBJECTS)
+	$(LD) -T linker.ld -o $(KERNEL) $(LDFLAGS) $(BUILD_DIR)/boot.o $(C_OBJECTS) $(ASM_OBJECTS) -lgcc
 
 # Create ISO with GRUB
 iso: $(KERNEL)
@@ -72,7 +80,7 @@ run: iso
 run-ramdisk: ramdisk-os
 	qemu-system-i386 -cdrom $(ISO)
 run-harddrive: harddrive-os
-	qemu-system-i386 -cdrom $ISO
+	qemu-system-i386 -cdrom $(ISO)
 # Clean everything
 clean:
 	rm -rf $(BUILD_DIR) $(KERNEL) $(ISO) isodir
@@ -80,3 +88,5 @@ clean:
 # Create build directory if missing
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
+
+# OBJS variable definition removed as we're using specific variables for C and ASM objects
