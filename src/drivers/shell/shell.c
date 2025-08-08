@@ -6,6 +6,8 @@
 #include "memory.h"
 static command_list_t command_list = {NULL, 0};
 // static int command_count = 0;
+char* SHELL_HISTORY[SHELL_HISTORY_SIZE];
+size_t SHELL_HISTORY_COUNT = 0;
 
 int shell_register_command(char* name, void (*function)(int argc, char** argv), char* help) {
     command_node_t* new_command = heap_malloc(sizeof(command_node_t));
@@ -65,11 +67,27 @@ static void shell_echo(int argc, char** argv) {
     terminal_writestring("\n");
 }
 
+static void cmd_history() {
+    if (SHELL_HISTORY_COUNT == 0) {
+        terminal_writestring("No commands in history.\n");
+        return;
+    }
+
+    for (size_t i = 0; i < SHELL_HISTORY_COUNT; i++) {
+        terminal_writestring(SHELL_HISTORY[i]);
+        terminal_writestring("\n");
+    }
+    terminal_writestring("\n");
+}
+
 void shell_initialize(void) {
 
     shell_register_command("help", shell_help, "Display this help message");
     shell_register_command("echo", shell_echo, "Echo or prints out the parameter passed");
     shell_register_command("test", cmd_run_tests, "Run system tests");
+    shell_register_command("history", cmd_history, "Show command history");
+    // shell_register_command("clear", cmd_clear, "Clear the terminal screen");
+    // shell_register_command("exit", cmd_exit, "Exit the shell");
 
     terminal_writestring("CHIMP OS SHELL v0.1\n");
     terminal_writestring("Type 'help' for commands\n");
@@ -87,6 +105,10 @@ void parse_command(char* command_line, int* argc, char** argv) {
 }
 
 void shell_process_command(char* command_line) {
+    if (command_line[0] == '\0') return;
+
+    SHELL_HISTORY[SHELL_HISTORY_COUNT++] = strdup(command_line);
+
     int argc = 0;
     char* argv[MAX_ARGS];
 

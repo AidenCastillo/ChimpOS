@@ -113,3 +113,11 @@ void strncpy(char* dest, const char* src, size_t n) {
 		dest[i] = '\0';
 	}
 }
+
+char* strdup(const char* str) {
+	char* dup = (char*)heap_malloc(strlen(str) + 1);
+	if (dup) {
+		strncpy(dup, str, strlen(str) + 1);
+	}
+	return dup;
+}

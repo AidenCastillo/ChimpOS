@@ -4,6 +4,7 @@ AS = i386-elf-as
 LD = i386-elf-gcc
 OBJCOPY = i386-elf-objcopy
 
+export GDB ?= 0 # Default to 0 if not set
 # Flags
 # Component configuration
 FS_TYPE ?= RAMDISK      # Options: RAMDISK, HARDDRIVE
@@ -78,12 +79,19 @@ harddrive-os: export FS_TYPE=HARDDRIVE
 harddrive-os: all
 
 # Run in QEMU
+$(info GDB value: [$(GDB)])
+ifeq ($(GDB),1) # If GDB is set, wait for debugger
+	QEMU_FLAGS := -s -S
+else
+	QEMU_FLAGS :=
+endif
+
 run: iso
-	qemu-system-i386 -s -S -cdrom $(ISO)
+	qemu-system-i386 $(QEMU_FLAGS) -cdrom $(ISO)
 run-ramdisk: ramdisk-os
-	qemu-system-i386 -s -S -cdrom $(ISO)
+	qemu-system-i386 $(QEMU_FLAGS) -cdrom $(ISO)
 run-harddrive: harddrive-os
-	qemu-system-i386 -cdrom $(ISO)
+	qemu-system-i386 $(QEMU_FLAGS) -cdrom $(ISO)
 # Clean everything
 clean:
 	rm -rf $(BUILD_DIR) $(KERNEL) $(ISO) isodir

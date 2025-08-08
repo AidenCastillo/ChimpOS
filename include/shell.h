@@ -7,6 +7,10 @@
 #define MAX_ARGS 10
 #define MAX_COMMANDS 32
 
+#define SHELL_PROMPT "user@host:/$ "
+#define SHELL_HISTORY_SIZE 100
+
+
 typedef struct command_node {
     char* name;
     void (*function)(int argc, char** argv);
