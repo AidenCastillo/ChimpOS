@@ -1,5 +1,5 @@
 # ChimpOS
-
+Currently only runs with a i386-elf cross compiler. Will get that fixed to run x86-64 and i686 cross compilers.
 # DEBUG
 To execute debug only functions and have automated tests ran at the beginning of boot, add `DEBUG=1` to your make command.
 `make run-ramdisk DEBUG=1`
