@@ -14,8 +14,11 @@ SCHEDULER ?= ROUND_ROBIN # Options: ROUND_ROBIN, PRIORITY
 COMPONENT_FLAGS = -DFS_$(FS_TYPE) -DSCHEDULER_$(SCHEDULER)
 
 # Add to CFLAGS
-CFLAGS = -c -std=gnu99 -ffreestanding -O2 -Wall -Wextra -Iinclude $(COMPONENT_FLAGS)
+CFLAGS = -c -g -std=gnu99 -ffreestanding -O2 -Wall -Wextra -Iinclude $(COMPONENT_FLAGS)
 LDFLAGS = -ffreestanding -O2 -nostdlib
+
+# asm flags, intel syntax
+ASFLAGS = -msyntax=intel -mnaked-reg -mmnemonic=intel
 
 # Directories
 SRC_DIR := src
@@ -76,9 +79,9 @@ harddrive-os: all
 
 # Run in QEMU
 run: iso
-	qemu-system-i386 -cdrom $(ISO)
+	qemu-system-i386 -s -S -cdrom $(ISO)
 run-ramdisk: ramdisk-os
-	qemu-system-i386 -cdrom $(ISO)
+	qemu-system-i386 -s -S -cdrom $(ISO)
 run-harddrive: harddrive-os
 	qemu-system-i386 -cdrom $(ISO)
 # Clean everything
