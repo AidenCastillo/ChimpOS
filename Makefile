@@ -4,7 +4,17 @@ AS = i386-elf-as
 LD = i386-elf-gcc
 OBJCOPY = i386-elf-objcopy
 
-export GDB ?= 0 # Default to 0 if not set
+GDB ?= 0 # Set to 1 to enable GDB support in QEMU
+
+DEBUG ?= 0 # Set to 1 to enable debug logs
+
+# if debug is enabled, make a c variable for it
+ifeq ($(DEBUG),1)
+	CVARS += DEBUG
+else 
+	CVARS := $(filter-out DEBUG,$(CVARS))
+endif
+
 # Flags
 # Component configuration
 FS_TYPE ?= RAMDISK      # Options: RAMDISK, HARDDRIVE
@@ -15,7 +25,7 @@ SCHEDULER ?= ROUND_ROBIN # Options: ROUND_ROBIN, PRIORITY
 COMPONENT_FLAGS = -DFS_$(FS_TYPE) -DSCHEDULER_$(SCHEDULER)
 
 # Add to CFLAGS
-CFLAGS = -c -g -std=gnu99 -ffreestanding -O2 -Wall -Wextra -Iinclude $(COMPONENT_FLAGS)
+CFLAGS = -c -g -std=gnu99 -ffreestanding -O2 -Wall -Wextra -Iinclude $(COMPONENT_FLAGS) $(foreach var,$(CVARS),-D$(var))
 LDFLAGS = -ffreestanding -O2 -nostdlib
 
 # asm flags, intel syntax

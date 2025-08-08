@@ -3,6 +3,10 @@
 
 #include <stdbool.h>
 
+#ifndef DEBUG
+#define DEBUG 0
+#endif
+
 typedef enum {
     LOG_ERROR = 0,
     LOG_WARN = 1,

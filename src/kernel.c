@@ -25,10 +25,10 @@ void kernel_main(void)
 	shell_initialize();
 	test_framework_init();
 
-	int ran_tests = 1;
+	int ran_tests = 0;
 
 	while (true) {
-		if (ran_tests == 0) {
+		if (DEBUG && ran_tests == 0) {
 			shell_process_command("test");
 			ran_tests = 1;
 			LOG_INFO("TESTS RAN %d", 10);
