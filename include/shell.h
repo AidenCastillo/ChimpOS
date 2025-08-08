@@ -8,7 +8,7 @@
 #define MAX_COMMANDS 32
 
 #define SHELL_PROMPT "user@host:/$ "
-#define SHELL_HISTORY_SIZE 100
+#define SHELL_HISTORY_SIZE 5
 
 
 typedef struct command_node {

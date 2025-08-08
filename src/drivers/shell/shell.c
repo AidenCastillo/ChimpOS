@@ -108,6 +108,14 @@ void shell_process_command(char* command_line) {
     if (command_line[0] == '\0') return;
 
     SHELL_HISTORY[SHELL_HISTORY_COUNT++] = strdup(command_line);
+    if (SHELL_HISTORY_COUNT >= SHELL_HISTORY_SIZE) {
+        // Simple history overflow handling: remove oldest command
+        heap_free(SHELL_HISTORY[0]);
+        for (size_t i = 1; i < SHELL_HISTORY_SIZE; i++) {
+            SHELL_HISTORY[i - 1] = SHELL_HISTORY[i];
+        }
+        SHELL_HISTORY_COUNT--;
+    }
 
     int argc = 0;
     char* argv[MAX_ARGS];
