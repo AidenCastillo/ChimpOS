@@ -55,22 +55,22 @@ static bool test_ramdisk_write(void) {
     memset(buffer, 0, sizeof(buffer)); // Clear the buffer
     ramdisk_read(&file, buffer, sizeof(buffer)); // Read back the data
 
-    terminal_writestring("Written data: ");
-    terminal_writestring(buffer);
-    terminal_writestring("\n");
-    terminal_writestring("Expected: ");
-    terminal_writestring(test_data);
+    // terminal_writestring("Written data: ");
+    // terminal_writestring(buffer);
+    // terminal_writestring("\n");
+    // terminal_writestring("Expected: ");
+    // terminal_writestring(test_data);
     if (strcmp(buffer, test_data) != 0) {
         terminal_writestring("Written data does not match expected contents\n");
         return false; // Contents do not match
     }
-    terminal_writestring("Data written successfully to RAM disk\n");
+    // terminal_writestring("Data written successfully to RAM disk\n");
     // Check if the file size was updated
     if (file.size != strlen(test_data) + 1) {
         terminal_writestring("File size does not match expected size\n");
         return false; // Size mismatch
     }
-    terminal_writestring("RAM disk write test passed\n");
+    // terminal_writestring("RAM disk write test passed\n");
     // Clean up
     heap_free(file.fs_data);
     return true; // Write successful

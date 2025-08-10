@@ -1,4 +1,6 @@
 #include "terminal.h"
+#include "keyboard.h"
+#include <stdbool.h>
 
 unsigned char inb(unsigned short port)
 {
@@ -21,13 +23,62 @@ unsigned char keyboard_data_ready() {
     return inb(0x64) & 1;
 }
 
+static char char_to_upper(char c) {
+    if (c >= 'a' && c <= 'z') {
+        return c - 32;
+    } else {
+        if (c >= '1' && c <= '9') {
+            // Handle shifted number keys
+            switch (c) {
+                case '1': return '!';
+                case '2': return '@';
+                case '3': return '#';
+                case '4': return '$';
+                case '5': return '%';
+                case '6': return '^';
+                case '7': return '&';
+                case '8': return '*';
+                case '9': return '(';
+            }
+        } else if (c == '0') {
+            return ')';
+        } else {
+            // Handle other shifted characters
+            switch (c) {
+                case '-': return '_';
+                case '=': return '+';
+                case '[': return '{';
+                case ']': return '}';
+                case '\\': return '|';
+                case ';': return ':';
+                case '\'': return '"';
+                case ',': return '<';
+                case '.': return '>';
+                case '/': return '?';
+                case '`': return '~';
+            }
+        }
+    }
+
+
+    return c;
+}
+
 void read_line(char* buffer, int max_len) {
     int i = 0;
+    bool shift_pressed = false;
     while (i < max_len - 1) {
         if (keyboard_data_ready()) {
             unsigned char scancode = inb(0x60);
             if (scancode & 0x80) {
-                
+                // Key release
+                if (scancode == 0xAA || scancode == 0xB6) {
+                    // Left or Right Shift release
+                    shift_pressed = false;
+                }
+            } else if (scancode == 0x2A || scancode == 0x36) {
+                // Left or Right Shift press
+                shift_pressed = true;
             } else {
                 char c = keyboard_map[scancode];
                 if (c == '\n') {
@@ -41,6 +92,9 @@ void read_line(char* buffer, int max_len) {
                     terminal_putchar(' ');
                     terminal_putchar('\b');
                 } else if (c) {
+                    if (shift_pressed) {
+                        c = char_to_upper(c);
+                    }
                     buffer[i++] = c;
                     terminal_putchar(c);
                 }

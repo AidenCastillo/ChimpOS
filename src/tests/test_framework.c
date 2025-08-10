@@ -65,12 +65,111 @@ void register_test_suite(test_suite_t* suite) {
     test_registry.suite_count++;
 }
 
-void cmd_run_tests(int argc, char** argv) {
+test_suite_t* get_test_suite(const char* name) {
+    test_suite_t* current = test_registry.head;
+    while (current) {
+        if (strcmp(current->suite_name, name) == 0) {
+            return current;
+        }
+        current = current->next;
+    }
+    return NULL;
+}
 
+test_case_t* get_test_case(const char* suite, const char* name) {
+    test_suite_t* current = get_test_suite(suite);
+    if (!current) return NULL;
+
+    for (int i = 0; i < current->test_count; i++) {
+        if (strcmp(current->tests[i].name, name) == 0) {
+            return &current->tests[i];
+        }
+    }
+    return NULL;
+}
+
+void run_test_suite(test_suite_t* suite) {
+    terminal_writestring("\n=== Running test suite: ");
+    terminal_writestring(suite->suite_name);
+    terminal_writestring(" ===\n");
+
+    if (suite->test_count == 0) {
+        terminal_writestring("No tests in suite\n");
+    } else {
+        for (int i = 0; i < suite->test_count; i++) {
+            test_case_t* test = &suite->tests[i];
+
+            terminal_writestring("  - ");
+            terminal_writestring(test->name);
+            terminal_writestring(": ");
+
+            bool result = test->test_func();
+
+            if (result) {
+                terminal_writestring("PASS\n");
+                test_registry.passed++;
+            } else {
+                terminal_writestring("FAIL\n");
+                test_registry.failed++;
+            }
+        }
+    }
+}
+
+int run_test_case(test_case_t* test) {
+    if (!test) return -1;
+
+    terminal_writestring("  - ");
+    terminal_writestring(test->name);
+    terminal_writestring(": ");
+
+    bool result = test->test_func();
+
+    if (result) {
+        terminal_writestring("PASS\n");
+        test_registry.passed++;
+        return 1;
+    } else {
+        terminal_writestring("FAIL\n");
+        test_registry.failed++;
+        return 0;
+    }
+}
+
+void cmd_run_tests(int argc, char** argv) {
+    
     terminal_writestring("\n");
     terminal_writestring("=== TEST FRAMEWORK ===\n");
-
-    run_all_tests();
+    
+    if (argc > 2) {
+        if (strcmp(argv[1], "-s") == 0) {
+            if (argc < 3) {
+                terminal_writestring("No test suite specified\n");
+                return;
+            }
+            test_suite_t* suite = get_test_suite(argv[2]);
+            if (suite) {
+                if (argc > 3) {
+                    for (int i = 4; i < argc; i++) {
+                        test_case_t* test = get_test_case(argv[2], argv[i]);
+                        if (test) {
+                            run_test_case(test);
+                        } else {
+                            terminal_writestring("Test case not found\n");
+                        }
+                    }
+                } else {
+                    run_test_suite(suite);
+                }
+            } else {
+                terminal_writestring("Test suite not found\n");
+            }
+        } else {
+            terminal_writestring("Invalid test argument\n");
+        }
+    } else {
+        run_all_tests();
+    }
 
     terminal_writestring("\n");
     terminal_writestring("=== PASSED: ");
@@ -81,6 +180,9 @@ void cmd_run_tests(int argc, char** argv) {
     itoa(test_registry.failed, buf, 10);
     terminal_writestring(buf);
     terminal_writestring("\n");
+
+    test_registry.passed = 0;
+    test_registry.failed = 0;
 
     // test_framework_cleanup(); 
     return;

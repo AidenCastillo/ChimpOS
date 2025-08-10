@@ -17,6 +17,7 @@ void terminal_write(const char* data, size_t size);
 void terminal_writestring(const char* data);
 void terminal_get_position(cursor_position_t* pos);
 void terminal_save_position(void);
+void terminal_clear(void);
 cursor_position_t terminal_get_prompt_position(void);
 
 #endif // TERMINAL_H

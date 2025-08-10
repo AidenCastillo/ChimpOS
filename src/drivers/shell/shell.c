@@ -4,6 +4,7 @@
 #include "common.h"
 #include "test_framework.h"
 #include "memory.h"
+#include "filesystem.h"
 static command_list_t command_list = {NULL, 0};
 // static int command_count = 0;
 char* SHELL_HISTORY[SHELL_HISTORY_SIZE];
@@ -80,14 +81,43 @@ static void cmd_history() {
     terminal_writestring("\n");
 }
 
+static void cmd_clear() {
+    terminal_clear();
+}
+
+static void cmd_cat(int argc, char** argv) {
+    if (argc < 2) {
+        terminal_writestring("Usage: cat <file>\n");
+        return;
+    }
+
+    char* filename = argv[1];
+    // Implement file reading and display contents
+    file_t* file = fs_open(filename, 0);
+    if (file == NULL) {
+        terminal_writestring("Error opening file.\n");
+        return;
+    }
+
+    char buffer[256];
+    if (fs_read(file, buffer, sizeof(buffer)) > 0) {
+        terminal_writestring(buffer);
+    }
+
+    fs_close(file);
+
+    terminal_writestring("\n");
+}
+
 void shell_initialize(void) {
 
     shell_register_command("help", shell_help, "Display this help message");
     shell_register_command("echo", shell_echo, "Echo or prints out the parameter passed");
-    shell_register_command("test", cmd_run_tests, "Run system tests");
+    shell_register_command("test", cmd_run_tests, TEST_HELP_STRING_GENERAL);
     shell_register_command("history", cmd_history, "Show command history");
-    // shell_register_command("clear", cmd_clear, "Clear the terminal screen");
+    shell_register_command("clear", cmd_clear, "Clear the terminal screen");
     // shell_register_command("exit", cmd_exit, "Exit the shell");
+    shell_register_command("cat", cmd_cat, "Concatenate and display files");
 
     terminal_writestring("CHIMP OS SHELL v0.1\n");
     terminal_writestring("Type 'help' for commands\n");

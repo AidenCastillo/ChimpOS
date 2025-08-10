@@ -96,6 +96,9 @@ else
 	QEMU_FLAGS :=
 endif
 
+# DEBUG
+$(info DEBUG value: [$(DEBUG)])
+
 run: iso
 	qemu-system-i386 $(QEMU_FLAGS) -cdrom $(ISO)
 run-ramdisk: ramdisk-os
