@@ -98,20 +98,7 @@ void run_test_suite(test_suite_t* suite) {
     } else {
         for (int i = 0; i < suite->test_count; i++) {
             test_case_t* test = &suite->tests[i];
-
-            terminal_writestring("  - ");
-            terminal_writestring(test->name);
-            terminal_writestring(": ");
-
-            bool result = test->test_func();
-
-            if (result) {
-                terminal_writestring("PASS\n");
-                test_registry.passed++;
-            } else {
-                terminal_writestring("FAIL\n");
-                test_registry.failed++;
-            }
+            run_test_case(test);
         }
     }
 }
@@ -195,34 +182,8 @@ void run_all_tests() {
     test_registry.failed = 0;
 
     while (current_suite) {
-        terminal_writestring("\n=== Running test suite: ");
-        terminal_writestring(current_suite->suite_name);
-        terminal_writestring(" ===\n");
-        
-        if (current_suite->test_count == 0) {
-            terminal_writestring("No tests in suite\n");
-        } else {
-            // Run each test in the suite
-            for (int i = 0; i < current_suite->test_count; i++) {
-                test_case_t* test = &current_suite->tests[i];
-                
-                terminal_writestring("  - ");
-                terminal_writestring(test->name);
-                terminal_writestring(": ");
-                
-                // Run the test function
-                bool result = test->test_func();
-                
-                if (result) {
-                    terminal_writestring("PASS\n");
-                    test_registry.passed++;
-                } else {
-                    terminal_writestring("FAIL\n");
-                    test_registry.failed++;
-                }
-            }
-        }
-        
+        run_test_suite(current_suite);
+
         // Move to next suite
         current_suite = current_suite->next;
     }
