@@ -6,10 +6,16 @@
 void debug_init() {
 }
 
-void debug_log(log_level_t level, const char* file, int line, const char* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
+void debugf(log_suite_t suite, log_level_t level, const char* fmt, ...) {
+    if (level <= suite.level) {
+        va_list args;
+        va_start(args, fmt);
+        debug_parse(level, __FILE__, __LINE__, fmt, args);
+        va_end(args);
+    }
+}
 
+void debug_parse(log_level_t level, const char* file, int line, const char* fmt, va_list args) {
     terminal_writestring("[");
     terminal_writestring(file);
     terminal_writestring(":");
@@ -18,6 +24,27 @@ void debug_log(log_level_t level, const char* file, int line, const char* fmt, .
     itoa(line, line_str, 10);
     terminal_writestring(line_str);
     terminal_writestring("] ");
+
+    switch(level) {
+        case LOG_ERROR:
+            terminal_writestring("[E]: ");
+            break;
+        case LOG_WARN:
+            terminal_writestring("[W]: ");
+            break;
+        case LOG_INFO:
+            terminal_writestring("[I]: ");
+            break;
+        case LOG_VERBOSE:
+            terminal_writestring("[V]: ");
+            break;
+        case LOG_TRACE:
+            terminal_writestring("[T]: ");
+            break;
+        default:
+            terminal_writestring("[U]: ");
+            break;
+    }
 
     for (const char* p = fmt; *p != '\0'; p++) {
         if (*p != '%') {
@@ -39,13 +66,10 @@ void debug_log(log_level_t level, const char* file, int line, const char* fmt, .
                 break;
             }
             case 'd': {
-                const char s[32];
-                itoa(va_arg(args, int*), s, 10);
-                if (s) {
-                    terminal_writestring(s);
-                } else {
-                    terminal_writestring("(NULL)");
-                }
+                char s[32] = {0};
+                int value = va_arg(args, int);
+                itoa(value, s, 10);
+                terminal_writestring(s);
                 break;
             }
 
@@ -57,5 +81,5 @@ void debug_log(log_level_t level, const char* file, int line, const char* fmt, .
 
     }
     terminal_putchar('\n');
-    va_end(args);
+    // No va_end here since we're using a passed va_list
 }

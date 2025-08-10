@@ -8,6 +8,7 @@
 #include "test_framework.h"
 #include "debug.h"
 
+log_suite_t KERNEL = { .level = LOG_INFO };
 
 void kernel_main(void) 
 {
@@ -31,8 +32,7 @@ void kernel_main(void)
 		if (DEBUG && ran_tests == 0) {
 			shell_process_command("test");
 			ran_tests = 1;
-			LOG_INFO("TESTS RAN %d", 10);
-			LOG_INFO("TEST STRING: %s", "passed");
+			debugf(KERNEL, LOG_INFO, "TESTS RAN %d", 10);
 		}
 		terminal_writestring("user@host:/$ ");
 		terminal_save_position();
