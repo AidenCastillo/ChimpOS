@@ -19,6 +19,10 @@ char keyboard_map[128] = {
     0, ' ', 0, /* ... rest ... */
 };
 
+// Special keys
+#define KEY_PAGE_UP   0x49  // This is the scancode for Page Up
+#define KEY_PAGE_DOWN 0x51  // This is the scancode for Page Down
+
 unsigned char keyboard_data_ready() {
     return inb(0x64) & 1;
 }
@@ -70,6 +74,16 @@ void read_line(char* buffer, int max_len) {
     while (i < max_len - 1) {
         if (keyboard_data_ready()) {
             unsigned char scancode = inb(0x60);
+            
+            // Check for Page Up/Down keys
+            if (scancode == KEY_PAGE_UP) {
+                terminal_page_up();
+                continue;
+            } else if (scancode == KEY_PAGE_DOWN) {
+                terminal_page_down();
+                continue;
+            }
+            
             if (scancode & 0x80) {
                 // Key release
                 if (scancode == 0xAA || scancode == 0xB6) {

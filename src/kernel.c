@@ -13,16 +13,15 @@ log_suite_t KERNEL = { .level = LOG_INFO };
 void kernel_main(void) 
 {
 	/* Initializations */
-	terminal_writestring("Kernel initializing...\n");
-
 	terminal_initialize();
+	terminal_writestring("Kernel initializing...\n");
+	heap_initialize();
 	debug_init();
 
 	if (fs_init()) {
 		LOG_ERROR("Filesystem initialization failed");
 	}
 	
-	heap_initialize();
 	shell_initialize();
 	test_framework_init();
 
