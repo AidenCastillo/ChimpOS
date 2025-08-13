@@ -2,8 +2,6 @@
 #include "filesystem.h"
 #include "string.h"
 
-uint8_t ramdisk_data[RAMDISK_SIZE];
-
 fs_type_t current_fs_type = FS_TYPE_RAMDISK;  // Default
 fs_operations_t* current_fs_ops = NULL;
 

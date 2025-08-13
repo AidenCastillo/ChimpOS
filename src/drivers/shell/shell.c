@@ -109,6 +109,24 @@ static void cmd_cat(int argc, char** argv) {
     terminal_writestring("\n");
 }
 
+static void cmd_touch(int argc, char** argv) {
+    if (argc < 2) {
+        terminal_writestring("Usage: touch <file name>\n");
+        return;
+    }
+
+    char* filename = argv[1];
+    // Check if file exists already
+    file_t* file = fs_open(filename, 0);
+    if (file != NULL) {
+        terminal_writestring("File already exists\n");
+        fs_close(file);
+        return;
+    }
+    
+    fs_close(file);
+}
+
 void shell_initialize(void) {
 
     shell_register_command("help", shell_help, "Display this help message");
@@ -118,6 +136,14 @@ void shell_initialize(void) {
     shell_register_command("clear", cmd_clear, "Clear the terminal screen");
     // shell_register_command("exit", cmd_exit, "Exit the shell");
     shell_register_command("cat", cmd_cat, "Concatenate and display files");
+    shell_register_command("touch", cmd_touch, "Create an empty file or updates file timestamps");
+    // shell_register_command("rm", cmd_rm, "Remove files");
+    // shell_register_command("ls", cmd_ls, "List directory contents");
+    // shell_register_command("mkdir", cmd_mkdir, "Create a new directory");
+    // shell_register_command("rmdir", cmd_rmdir, "Remove a directory");
+    // shell_register_command("cd", cmd_cd, "Change the current directory");
+    // shell_register_command("pwd", cmd_pwd, "Print the current working directory");
+
 
     terminal_writestring("CHIMP OS SHELL v0.1\n");
     terminal_writestring("Type 'help' for commands\n");

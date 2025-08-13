@@ -7,6 +7,13 @@
 
 #define MAX_FILENAME_LENGTH 25
 
+#define O_RDONLY  0x0001 // Open for reading only
+#define O_WRONLY  0x0002 // Open for writing only
+#define O_RDWR    (O_RDONLY | O_WRONLY) // Open for reading and writing
+#define O_CREAT   0x0008 // Create file if it does not exist
+#define O_TRUNC   0x0010 // Truncate file to zero length
+#define O_APPEND  0x0020 // Append to the end of the file
+
 typedef struct {
     char name[MAX_FILENAME_LENGTH]; // Name of the file
     uint32_t size; // Size of the file in bytes

@@ -44,8 +44,8 @@
   - [ ] Create a scripting capability
 # Debugging Infrastructure
 - [ ] Complete the debug logging system
-  - [ ] Add log levels (ERROR, WARNING, INFO, DEBUG)
-  - [ ] Implement log filtering by component
+  - [X] Add log levels (ERROR, WARNING, INFO, DEBUG)
+  - [X] Implement log filtering by component
   - [ ] Create circular buffer for log storage
   - [ ] Add timestamp and source file information
   - [ ] Implement log output redirection (screen, serial, disk)
