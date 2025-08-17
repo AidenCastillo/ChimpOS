@@ -16,27 +16,7 @@
 #error "This tutorial needs to be compiled with a ix86-elf compiler"
 #endif
 
-/* Hardware text mode color constants. */
-enum vga_color {
-	VGA_COLOR_BLACK = 0,
-	VGA_COLOR_BLUE = 1,
-	VGA_COLOR_GREEN = 2,
-	VGA_COLOR_CYAN = 3,
-	VGA_COLOR_RED = 4,
-	VGA_COLOR_MAGENTA = 5,
-	VGA_COLOR_BROWN = 6,
-	VGA_COLOR_LIGHT_GREY = 7,
-	VGA_COLOR_DARK_GREY = 8,
-	VGA_COLOR_LIGHT_BLUE = 9,
-	VGA_COLOR_LIGHT_GREEN = 10,
-	VGA_COLOR_LIGHT_CYAN = 11,
-	VGA_COLOR_LIGHT_RED = 12,
-	VGA_COLOR_LIGHT_MAGENTA = 13,
-	VGA_COLOR_LIGHT_BROWN = 14,
-	VGA_COLOR_WHITE = 15,
-};
-
-static inline uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg) 
+uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg) 
 {
 	return fg | bg << 4;
 }
@@ -50,6 +30,7 @@ size_t terminal_row;
 size_t terminal_column;
 uint8_t terminal_color;
 uint16_t* terminal_buffer = (uint16_t*)VGA_MEMORY;
+
 
 static cursor_position_t prompt_position;
 
@@ -118,9 +99,21 @@ cursor_position_t terminal_get_prompt_position(void) {
     return prompt_position;
 }
 
-void terminal_setcolor(uint8_t color) 
+void terminal_set_color(uint8_t color) 
 {
 	terminal_color = color;
+}
+
+void terminal_set_fg_color(enum vga_color fg)
+{
+	uint8_t bg = (terminal_color >> 4) & 0xF;
+	terminal_color = vga_entry_color(fg, bg);
+}
+
+void terminal_set_bg_color(enum vga_color bg)
+{
+	uint8_t fg = terminal_color & 0xF;
+	terminal_color = vga_entry_color(fg, bg);
 }
 
 void terminal_putentryat(char c, uint8_t color, size_t x, size_t y) 
@@ -252,6 +245,34 @@ void terminal_scroll_down(void) {
 	}
 }
 
+void terminal_putchar_colored(char c, enum vga_color fg, enum vga_color bg) 
+{
+	uint8_t saved_color = terminal_color;
+	
+	terminal_color = vga_entry_color(fg, bg);
+	
+	terminal_putchar(c);
+	
+	terminal_color = saved_color;
+}
+
+void terminal_write_colored(const char* data, size_t size, enum vga_color fg, enum vga_color bg)
+{
+	uint8_t saved_color = terminal_color;
+	terminal_color = vga_entry_color(fg, bg);
+	
+	for (size_t i = 0; i < size; i++) {
+		terminal_putchar(data[i]);
+	}
+	
+	terminal_color = saved_color;
+}
+
+void terminal_writestring_colored(const char* data, enum vga_color fg, enum vga_color bg)
+{
+	terminal_write_colored(data, strlen(data), fg, bg);
+}
+
 void terminal_putchar(char c) 
 {
 	if (scroll_position > 0) {
@@ -320,20 +341,61 @@ static void handle_escape_sequence(const char* data, size_t* index, size_t size)
 	}
 
 	size_t j = *index + 2;
-	uint16_t code[4] = {0};
-	int code_index = 0;
+	int codes[10] = {0};
+	int code_count = 0;
+	int current_code = 0;
+	bool parsing_number = false;
 
-	while (j < size && data[j] != 'm' && code_index < 3) {
-		code[code_index++] = data[j++] - '0';
+	while (j < size && data[j] != 'm' && code_count < 10) {
+		if (data[j] >= '0' && data[j] <= '9') {
+			current_code = current_code * 10 + (data[j] - '0');
+			parsing_number = true;
+		} else if (data[j] == ';') {
+			if (parsing_number) {
+				codes[code_count++] = current_code;
+				current_code = 0;
+				parsing_number = false;
+			}
+		}
+		j++;
 	}
 
-	int color_code = 0;
-	for (int i = 0; i < code_index; i++) {
-		color_code = color_code * 10 + code[i];
+	if (parsing_number) {
+		codes[code_count++] = current_code;
 	}
 
-	switch (color_code) {
-		case 94: terminal_color = vga_entry_color(VGA_COLOR_BLUE, VGA_COLOR_BLACK);
+	// Process the color codes
+	for (int i = 0; i < code_count; i++) {
+		int code = codes[i];
+		
+		// Reset colors
+		if (code == 0) {
+			terminal_color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
+		}
+		// Foreground colors (30-37)
+		else if (code >= 30 && code <= 37) {
+			uint8_t fg = (code - 30) & 0x7; // Convert ANSI color to VGA color
+			uint8_t bg = (terminal_color >> 4) & 0xF; // Extract current background
+			terminal_color = vga_entry_color(fg, bg);
+		}
+		// Bright foreground colors (90-97)
+		else if (code >= 90 && code <= 97) {
+			uint8_t fg = ((code - 90) & 0x7) + 8; // Add 8 for bright colors
+			uint8_t bg = (terminal_color >> 4) & 0xF; // Extract current background
+			terminal_color = vga_entry_color(fg, bg);
+		}
+		// Background colors (40-47)
+		else if (code >= 40 && code <= 47) {
+			uint8_t fg = terminal_color & 0xF; // Extract current foreground
+			uint8_t bg = (code - 40) & 0x7; // Convert ANSI color to VGA color
+			terminal_color = vga_entry_color(fg, bg);
+		}
+		// Bright background colors (100-107)
+		else if (code >= 100 && code <= 107) {
+			uint8_t fg = terminal_color & 0xF; // Extract current foreground
+			uint8_t bg = ((code - 100) & 0x7) + 8; // Add 8 for bright colors
+			terminal_color = vga_entry_color(fg, bg);
+		}
 	}
 
 	*index = j;

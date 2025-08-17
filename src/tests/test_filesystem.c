@@ -129,6 +129,38 @@ static bool test_fs_create_file(void) {
     return true; // File creation successful
 }
 
+static bool test_fs_delete_file(void) {
+    return false;
+}
+
+static bool test_fs_list_files(void) {
+    return false;
+}
+
+static bool test_fs_rename_file(void) {
+    return false;
+}
+
+static bool test_fs_copy_file(void) {
+    return false;
+}
+
+static bool test_fs_check_file_exists(void) {
+    return false;
+}
+
+static bool test_fs_get_file_size(void) {
+    return false;
+}
+
+static bool test_fs_get_file_flags(void) {
+    return false;
+}
+
+static bool test_fs_set_file_flags(void) {
+    return false;
+}
+
 void register_filesystem_tests(void) {
     test_suite_t* suite = create_test_suite("filesystem");
 
@@ -141,17 +173,17 @@ void register_filesystem_tests(void) {
     // add_test_case(suite, "fs_mount", "Tests mounting the filesystem", fs_mount);
     // add_test_case(suite, "fs_format", "Tests formatting the filesystem", fs_format);
     // add_test_case(suite, "fs_init", "Tests initializing the filesystem", fs_init);
-    // add_test_case(suite, "fs_delete_file", "Tests deleting a file in the filesystem", fs_delete_file);
-    // add_test_case(suite, "fs_list_files", "Tests listing files in the filesystem", fs_list_files);
+    add_test_case(suite, "fs_delete_file", "Tests deleting a file in the filesystem", test_fs_delete_file);
+    add_test_case(suite, "fs_list_files", "Tests listing files in the filesystem", test_fs_list_files);
     // add_test_case(suite, "fs_get_file_info", "Tests getting file information from the filesystem", fs_get_file_info);
-    // add_test_case(suite, "fs_rename_file", "Tests renaming a file in the filesystem", fs_rename_file);
-    // add_test_case(suite, "fs_copy_file", "Tests copying a file in the filesystem", fs_copy_file);
+    add_test_case(suite, "fs_rename_file", "Tests renaming a file in the filesystem", test_fs_rename_file);
+    add_test_case(suite, "fs_copy_file", "Tests copying a file in the filesystem", test_fs_copy_file);
     // add_test_case(suite, "fs_move_file", "Tests moving a file in the filesystem", fs_move_file);
     // add_test_case(suite, "fs_check_space", "Tests checking available space in the filesystem", fs_check_space);
-    // add_test_case(suite, "fs_check_file_exists", "Tests checking if a file exists in the filesystem", fs_check_file_exists);
-    // add_test_case(suite, "fs_get_file_size", "Tests getting the size of a file in the filesystem", fs_get_file_size);
-    // add_test_case(suite, "fs_get_file_flags", "Tests getting the flags of a file in the filesystem", fs_get_file_flags);
-    // add_test_case(suite, "fs_set_file_flags", "Tests setting the flags of a file in the filesystem", fs_set_file_flags);
+    add_test_case(suite, "fs_check_file_exists", "Tests checking if a file exists in the filesystem", test_fs_check_file_exists);
+    add_test_case(suite, "fs_get_file_size", "Tests getting the size of a file in the filesystem", test_fs_get_file_size);
+    add_test_case(suite, "fs_get_file_flags", "Tests getting the flags of a file in the filesystem", test_fs_get_file_flags);
+    add_test_case(suite, "fs_set_file_flags", "Tests setting the flags of a file in the filesystem", test_fs_set_file_flags);
     // add_test_case(suite, "fs_get_file_creation_time", "Tests getting the creation time of a file in the filesystem", fs_get_file_creation_time);
     // add_test_case(suite, "fs_get_file_modification_time", "Tests getting the modification time of a file in the filesystem", fs_get_file_modification_time);
     // add_test_case(suite, "fs_get_file_access_time", "Tests getting the access time of a file in the filesystem", fs_get_file_access_time);

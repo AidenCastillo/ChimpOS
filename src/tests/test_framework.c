@@ -113,11 +113,11 @@ int run_test_case(test_case_t* test) {
     bool result = test->test_func();
 
     if (result) {
-        terminal_writestring("PASS\n");
+        terminal_writestring("\033[32mPASS\033[0m\n");
         test_registry.passed++;
         return 1;
     } else {
-        terminal_writestring("FAIL\n");
+        terminal_writestring("\033[34mFAIL\033[0m\n");
         test_registry.failed++;
         return 0;
     }
@@ -159,14 +159,14 @@ void cmd_run_tests(int argc, char** argv) {
     }
 
     terminal_writestring("\n");
-    terminal_writestring("=== PASSED: ");
+    terminal_writestring("=== PASSED: \033[32m");
     char buf[32];
     itoa(test_registry.passed, buf, 10);
     terminal_writestring(buf);
-    terminal_writestring("\n=== FAILED: ");
+    terminal_writestring("\033[0m\n=== FAILED: \033[34m");
     itoa(test_registry.failed, buf, 10);
     terminal_writestring(buf);
-    terminal_writestring("\n");
+    terminal_writestring("\033[0m\n");
 
     test_registry.passed = 0;
     test_registry.failed = 0;
