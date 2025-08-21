@@ -21,7 +21,7 @@ static bool test_itoa() {
 
 
 void register_string_tests(void) {
-    test_suite_t* suite = create_test_suite("string");
+    test_suite_t* suite = create_test_suite("string", NULL, NULL);
 
     add_test_case(suite, "strcmp", "", test_strcmp);
     add_test_case(suite, "itoa", "", test_itoa);

@@ -9,7 +9,7 @@ static bool test_alloc() {
 }
 
 void register_malloc_tests(void) {
-    test_suite_t* suite = create_test_suite("malloc");
+    test_suite_t* suite = create_test_suite("malloc", NULL, NULL);
 
     add_test_case(suite, "basic_allocation", "Tests allocation functions", test_alloc);
     add_test_case(suite, "double_free", "Tests double free detection", test_alloc); // Placeholder for actual double free test

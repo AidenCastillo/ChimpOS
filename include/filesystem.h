@@ -30,6 +30,7 @@ typedef struct {
     int (*write)(file_t* file, const void* buffer, size_t size);
     file_t* (*open)(const char* path, int flags);
     int (*close)(file_t* file);
+    int (*delete)(file_t* file);
 } fs_operations_t;
 
 #ifndef RAMDISK_SIZE
@@ -48,6 +49,8 @@ file_t* fs_open(const char* path, int flags);
 int fs_close(file_t* file);
 int fs_read(file_t* file, void* buffer, size_t size);
 int fs_write(file_t* file, const void* buffer, size_t size);
+int fs_rename(file_t* file, const char* new_name);
+int fs_delete(file_t* file);
 
 typedef enum {
     FS_TYPE_RAMDISK,

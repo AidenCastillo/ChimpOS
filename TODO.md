@@ -64,6 +64,13 @@
   - [ ] Add symbol name resolution if possible
   - [ ] Create backtrace visualization
 # Testing
+- [ ] Add verbose mode to tests
+- [ ] Add skip flag to test case or suite
+- [ ] Add stats
+  - [ ] runtime
+  - [ ] pass/fail percent
+  - [ ] which suite failed most
+- [ ] setup and teardown
 - [x] Add more comprehensive test cases for the filesystem
   - [ ] Test edge cases (full disk, corrupted entries)
   - [ ] Implement stress testing with many files

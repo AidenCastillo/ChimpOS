@@ -103,6 +103,21 @@ int ramdisk_fs_close(file_t* file) {
     return 0;
 }
 
+int ramdisk_fs_delete(file_t* file) {
+    if (!file) {
+        return -1;
+    }
+
+    for (int i = 0; i < MAX_FILES; i++) {
+        if (ramdisk_files[i] == file) {
+            heap_free(file);
+            ramdisk_files[i] = NULL;
+            return 0;
+        }
+    }
+
+    return -1; // File not found
+}
 
 fs_operations_t ramdisk_fs_ops = {
     .init = ramdisk_init,
@@ -110,6 +125,7 @@ fs_operations_t ramdisk_fs_ops = {
     .read = ramdisk_read,
     .write = ramdisk_write,
     .close = ramdisk_fs_close,
-    .open = ramdisk_fs_open
+    .open = ramdisk_fs_open,
+    .delete = ramdisk_fs_delete
 };
 #endif

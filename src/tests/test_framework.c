@@ -18,12 +18,26 @@ void test_framework_init() {
     }
 }
 
-test_suite_t* create_test_suite(const char* name) {
+void suite_set_up(test_suite_t* suite) {
+    if (suite && suite->set_up) {
+        suite->set_up();
+    }
+}
+
+void suite_tear_down(test_suite_t* suite) {
+    if (suite && suite->tear_down) {
+        suite->tear_down();
+    }
+}
+
+test_suite_t* create_test_suite(const char* name, int (*set_up)(void), int (*tear_down)(void)) {
     test_suite_t* suite = heap_malloc(sizeof(test_suite_t));
 
     suite->suite_name = name;
     suite->tests = NULL;
     suite->test_count = 0;
+    suite->set_up = set_up;
+    suite->tear_down = tear_down;
     suite->next = NULL;
 
     return suite;
@@ -93,6 +107,8 @@ void run_test_suite(test_suite_t* suite) {
     terminal_writestring(suite->suite_name);
     terminal_writestring(" ===\n");
 
+    suite_set_up(suite);
+
     if (suite->test_count == 0) {
         terminal_writestring("No tests in suite\n");
     } else {
@@ -101,6 +117,8 @@ void run_test_suite(test_suite_t* suite) {
             run_test_case(test);
         }
     }
+
+    suite_tear_down(suite);
 }
 
 int run_test_case(test_case_t* test) {

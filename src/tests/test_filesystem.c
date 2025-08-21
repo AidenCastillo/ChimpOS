@@ -3,7 +3,18 @@
 #include "string.h"
 #include "terminal.h"
 #include "memory.h"
+#include "debug.h"
 
+
+static int test_fs_init(void) {
+    // Initialize the filesystem
+    return 0;
+}
+
+static int test_fs_cleanup(void) {
+    // Cleanup the filesystem
+    return 0;
+}
 
 static bool test_fs_open(void) {
     file_t* file = fs_open("testfile.txt", O_RDONLY | O_CREAT);
@@ -130,7 +141,21 @@ static bool test_fs_create_file(void) {
 }
 
 static bool test_fs_delete_file(void) {
-    return false;
+    file_t* file = fs_open("testfile.txt", O_RDONLY | O_CREAT);
+    if (file == NULL) {
+        terminal_writestring("Error opening file for deletion\n");
+        return false; // Open failed
+    }
+
+    int result = fs_delete(file);
+    if (result < 0) {
+        terminal_writestring("Error deleting file\n");
+        fs_close(file);
+        return false; // Delete failed
+    }
+
+    fs_close(file);
+    return true; // Delete successful
 }
 
 static bool test_fs_list_files(void) {
@@ -138,7 +163,21 @@ static bool test_fs_list_files(void) {
 }
 
 static bool test_fs_rename_file(void) {
-    return false;
+    file_t* file = fs_open("testfile.txt", O_RDONLY | O_CREAT);
+    if (file == NULL) {
+        terminal_writestring("Error opening file for renaming\n");
+        return false; // Open failed
+    }
+
+    int result = fs_rename(file, "newfile.txt");
+    if (result < 0) {
+        terminal_writestring("Error renaming file\n");
+        fs_close(file);
+        return false; // Rename failed
+    }
+
+    fs_close(file);
+    return true; // Rename successful
 }
 
 static bool test_fs_copy_file(void) {
@@ -161,8 +200,9 @@ static bool test_fs_set_file_flags(void) {
     return false;
 }
 
+
 void register_filesystem_tests(void) {
-    test_suite_t* suite = create_test_suite("filesystem");
+    test_suite_t* suite = create_test_suite("filesystem", test_fs_init, test_fs_cleanup);
 
     // Add test cases for filesystem operations
     add_test_case(suite, "fs_create_file", "Tests creating a file in the filesystem", test_fs_create_file);

@@ -17,6 +17,8 @@ typedef struct test_suite_node {
     const char* suite_name;
     test_case_t* tests;
     int test_count;
+    int (*set_up)(void);
+    int (*tear_down)(void);
     struct test_suite_node* next;
 } test_suite_t;
 
@@ -39,12 +41,15 @@ void cmd_run_tests(int argc, char** argv);
 
 void test_framework_init(void);
 void test_framework_cleanup(void);
-test_suite_t* create_test_suite(const char* name);
+test_suite_t* create_test_suite(const char* name, int (*set_up)(void), int (*tear_down)(void));
 void register_test_suite(test_suite_t* suite);
 void add_test_case(test_suite_t* suite, const char* name, const char* desc, bool (*test_func)(void));
 test_suite_t* get_test_suite(const char* name);
 test_case_t* get_test_case(const char* suite_name, const char* test_name);
 // test_result_t* get_test_result(const char* suite_name, const char* test_name);
+
+void suite_set_up(test_suite_t* suite);
+void suite_tear_down(test_suite_t* suite);
 
 void run_test_by_name(const char* suite_name);
 void run_test_suite(test_suite_t* suite);

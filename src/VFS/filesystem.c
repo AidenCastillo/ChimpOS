@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include "filesystem.h"
 #include "string.h"
+#include "errno.h"
 
 fs_type_t current_fs_type = FS_TYPE_RAMDISK;  // Default
 fs_operations_t* current_fs_ops = NULL;
@@ -12,8 +13,6 @@ fs_type_t get_fs_type(void) {
 void set_fs_type(fs_type_t type) {
     current_fs_type = type;
 }
-
-
 
 int fs_init(void) {
     // Set up the function pointers based on filesystem type
@@ -47,7 +46,7 @@ int fs_close(file_t* file) {
     if (file) {
         heap_free(file);
     } else {
-        return -1; // Error: file is NULL
+        return -EINVAL; // Error: file is NULL
     }
     return 0; // Return 0 on success
 }
@@ -60,3 +59,19 @@ int fs_write(file_t* file, const void* buffer, size_t size) {
     return current_fs_ops->write(file, buffer, size);
 }
 
+int fs_rename(file_t* file, const char* new_name) {
+    if (file) {
+        strncpy(file->name, new_name, MAX_FILENAME_LENGTH);
+        return 0;
+    }
+    return EINVAL;
+}
+
+int fs_delete(file_t* file) {
+    if (file) {
+        current_fs_ops->delete(file);
+        return 0;
+    }
+    // ENOENT
+    return ENOENT;
+}
