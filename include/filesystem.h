@@ -35,9 +35,11 @@ typedef struct {
 
 #ifndef RAMDISK_SIZE
 #define RAMDISK_SIZE (1024 * 1024)
+#define MAX_FILES 128
 #endif
-
-extern uint8_t ramdisk_data[RAMDISK_SIZE];
+extern size_t disk_file_count;
+extern file_t* disk_files[MAX_FILES];
+extern uint8_t disk_data[RAMDISK_SIZE];
 
 int ramdisk_read(file_t* file, void* buffer, size_t size);
 int ramdisk_write(file_t* file, const void* buffer, size_t size);

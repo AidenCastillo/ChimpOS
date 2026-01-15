@@ -6,6 +6,7 @@
 fs_type_t current_fs_type = FS_TYPE_RAMDISK;  // Default
 fs_operations_t* current_fs_ops = NULL;
 
+
 fs_type_t get_fs_type(void) {
     return current_fs_type;
 }
@@ -30,7 +31,7 @@ int fs_init(void) {
 
 void fs_format(void) {
     // Format the filesystem, e.g., clear the RAM disk
-    memset(ramdisk_data, 0, RAMDISK_SIZE);
+    memset(disk_data, 0, RAMDISK_SIZE);
 }
 void fs_mount(void) {
     // Mount the filesystem, e.g., prepare the RAM disk for use
@@ -74,4 +75,11 @@ int fs_delete(file_t* file) {
     }
     // ENOENT
     return ENOENT;
+}
+// count is an output parameter to store the number of files
+ file_t** fs_list_files(size_t* count) {
+    if (count) {
+        *count = disk_file_count;
+    }
+    return disk_files;
 }

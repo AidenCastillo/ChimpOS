@@ -117,14 +117,32 @@ static void cmd_touch(int argc, char** argv) {
 
     char* filename = argv[1];
     // Check if file exists already
-    file_t* file = fs_open(filename, 0);
-    if (file != NULL) {
-        terminal_writestring("File already exists\n");
-        fs_close(file);
+    file_t* file = fs_open(filename, O_CREAT);
+    if (file == NULL) {
+        terminal_writestring("Error creating file.\n");
         return;
     }
     
     fs_close(file);
+}
+
+static void cmd_ls(UNUSED int argc, UNUSED char** argv) {
+    size_t file_count = 0;
+    file_t** files = fs_list_files(&file_count);
+    char buf[32];
+    itoa(file_count, buf, 10);
+    terminal_writestring(buf);
+    terminal_writestring(" files found:\n");
+    if (files == NULL || file_count == 0) {
+        terminal_writestring("No files found.\n");
+        return;
+    }
+
+    for (size_t i = 0; i < file_count; i++) {
+        terminal_writestring("file ");
+        terminal_writestring(files[i]->name);
+        terminal_writestring("\n");
+    }
 }
 
 void shell_initialize(void) {
@@ -138,7 +156,7 @@ void shell_initialize(void) {
     shell_register_command("cat", cmd_cat, "Concatenate and display files");
     shell_register_command("touch", cmd_touch, "Create an empty file or updates file timestamps");
     // shell_register_command("rm", cmd_rm, "Remove files");
-    // shell_register_command("ls", cmd_ls, "List directory contents");
+    shell_register_command("ls", cmd_ls, "List directory contents");
     // shell_register_command("mkdir", cmd_mkdir, "Create a new directory");
     // shell_register_command("rmdir", cmd_rmdir, "Remove a directory");
     // shell_register_command("cd", cmd_cd, "Change the current directory");

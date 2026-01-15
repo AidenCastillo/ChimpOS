@@ -5,20 +5,20 @@
 
 #define MAX_FILES 128
 
-file_t* ramdisk_files[MAX_FILES];
-
-uint8_t ramdisk_data[RAMDISK_SIZE];
+file_t* disk_files[MAX_FILES];
+uint8_t disk_data[RAMDISK_SIZE];
+size_t disk_file_count = 0;
 
 void ramdisk_init(void) {
-    memset(ramdisk_data, 0, RAMDISK_SIZE);
+    memset(disk_data, 0, RAMDISK_SIZE);
     
     for (int i = 0; i < MAX_FILES; i++) {
-        ramdisk_files[i] = NULL;
+        disk_files[i] = NULL;
     }
 }
 
 void ramdisk_format(void) {
-    memset(ramdisk_data, 0, RAMDISK_SIZE);
+    memset(disk_data, 0, RAMDISK_SIZE);
 }
 
 int ramdisk_read(file_t* file, void* buffer, size_t size) {
@@ -32,7 +32,7 @@ int ramdisk_read(file_t* file, void* buffer, size_t size) {
             size = RAMDISK_SIZE - offset; // Prevent overflow
         }
         
-        memcpy(buffer, &ramdisk_data[offset], size);
+        memcpy(buffer, &disk_data[offset], size);
         return size;
     }
     return -1;
@@ -49,7 +49,7 @@ int ramdisk_write(file_t* file, const void* buffer, size_t size) {
             size = RAMDISK_SIZE - offset; // Prevent overflow
         }
 
-        memcpy(&ramdisk_data[offset], buffer, size);
+        memcpy(&disk_data[offset], buffer, size);
         file->size += size; // Update file size
         return size;
     }
@@ -58,16 +58,17 @@ int ramdisk_write(file_t* file, const void* buffer, size_t size) {
 
 file_t* ramdisk_fs_open(const char* path, int flags) {
     file_t* file = NULL;
+    // Check if file already exists
     for (int i = 0; i < MAX_FILES; i++) {
-        if (ramdisk_files[i] && strcmp(ramdisk_files[i]->name, path) == 0) {
+        if (disk_files[i] && strcmp(disk_files[i]->name, path) == 0) {
             file = heap_malloc(sizeof(file_t));
             if (!file) return NULL;
             
-            memcpy(file, ramdisk_files[i], sizeof(file_t));
+            memcpy(file, disk_files[i], sizeof(file_t));
             return file;
         }
     }
-
+    // If file does not exist and O_CREAT is specified, create new file
     if (flags & O_CREAT) {
         file = heap_malloc(sizeof(file_t));
         if (!file) return NULL;
@@ -77,20 +78,20 @@ file_t* ramdisk_fs_open(const char* path, int flags) {
         file->size = 0;
         file->flags = flags;
         file->fs_data = (void*)0;
-
+        // Add to disk files
+        disk_file_count++;
         for (int i = 0; i < MAX_FILES; i++) {
-            if (!ramdisk_files[i]) {
-                ramdisk_files[i] = heap_malloc(sizeof(file_t));
-                if (!ramdisk_files[i]) {
+            if (!disk_files[i]) {
+                disk_files[i] = heap_malloc(sizeof(file_t));
+                if (!disk_files[i]) {
                     heap_free(file);
                     return NULL;
                 }
-                memcpy(ramdisk_files[i], file, sizeof(file_t));
+                memcpy(disk_files[i], file, sizeof(file_t));
                 break;
             }
         }
     }
-
     return file;
 }
 
@@ -109,9 +110,10 @@ int ramdisk_fs_delete(file_t* file) {
     }
 
     for (int i = 0; i < MAX_FILES; i++) {
-        if (ramdisk_files[i] == file) {
+        if (disk_files[i] == file) {
             heap_free(file);
-            ramdisk_files[i] = NULL;
+            disk_files[i] = NULL;
+            disk_file_count--;
             return 0;
         }
     }
