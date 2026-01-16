@@ -35,7 +35,7 @@ static bool test_fs_open(void) {
 }
 
 static bool test_fs_read(void) {
-    file_t* file = fs_open("testfile.txt", O_RDONLY | O_CREAT);
+    file_t* file = fs_open("testfile.txt", O_RDWR | O_CREAT);
     if (file == NULL) {
         terminal_writestring("Error opening file for reading\n");
         return false; // Open failed
@@ -55,6 +55,7 @@ static bool test_fs_read(void) {
     if (strcmp(buffer, "Test data for RAM disk") != 0) {
         terminal_writestring("Read data does not match expected contents\n");
         terminal_writestring(buffer);
+        terminal_writestring("\n");
         fs_close(file);
         return false; // Contents do not match
     }
@@ -162,10 +163,6 @@ static bool test_fs_list_files(void) {
     // fs_open("file1.txt", O_CREAT | O_RDWR);
     size_t count = 0;
     file_t** files = fs_list_files(&count);
-    char buf[32];
-    itoa(count, buf, 10);
-    terminal_writestring(buf);
-    terminal_writestring(" files found:\n");
     if (files == NULL) {
         terminal_writestring("Error listing files\n");
         return false; // List failed

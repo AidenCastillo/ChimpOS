@@ -4,6 +4,7 @@
 #include "string.h"
 
 #define MAX_FILES 128
+#define FILE_SIZE_LIMIT (RAMDISK_SIZE / MAX_FILES) // Each file gets a portion of the ramdisk
 
 file_t* disk_files[MAX_FILES];
 uint8_t disk_data[RAMDISK_SIZE];
@@ -65,6 +66,7 @@ file_t* ramdisk_fs_open(const char* path, int flags) {
             if (!file) return NULL;
             
             memcpy(file, disk_files[i], sizeof(file_t));
+            file->flags = flags;  // Update flags to the requested ones
             return file;
         }
     }
@@ -77,9 +79,16 @@ file_t* ramdisk_fs_open(const char* path, int flags) {
         file->name[MAX_FILENAME_LENGTH - 1] = '\0';
         file->size = 0;
         file->flags = flags;
-        file->fs_data = (void*)0;
+        
+        // Allocate unique offset for this file based on file index
+        uint32_t file_offset = (disk_file_count * FILE_SIZE_LIMIT);
+        if (file_offset + FILE_SIZE_LIMIT > RAMDISK_SIZE) {
+            heap_free(file);
+            return NULL; // No more space
+        }
+        file->fs_data = (void*)file_offset;
+        
         // Add to disk files
-        disk_file_count++;
         for (int i = 0; i < MAX_FILES; i++) {
             if (!disk_files[i]) {
                 disk_files[i] = heap_malloc(sizeof(file_t));
@@ -88,6 +97,7 @@ file_t* ramdisk_fs_open(const char* path, int flags) {
                     return NULL;
                 }
                 memcpy(disk_files[i], file, sizeof(file_t));
+                disk_file_count++;
                 break;
             }
         }

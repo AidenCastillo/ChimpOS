@@ -9,6 +9,8 @@ static command_list_t command_list = {NULL, 0};
 // static int command_count = 0;
 char* SHELL_HISTORY[SHELL_HISTORY_SIZE];
 size_t SHELL_HISTORY_COUNT = 0;
+bool redirect_output = false;
+char redirect_filename[64];
 
 int shell_register_command(char* name, void (*function)(int argc, char** argv), char* help) {
     command_node_t* new_command = heap_malloc(sizeof(command_node_t));
@@ -93,7 +95,7 @@ static void cmd_cat(int argc, char** argv) {
 
     char* filename = argv[1];
     // Implement file reading and display contents
-    file_t* file = fs_open(filename, 0);
+    file_t* file = fs_open(filename, O_RDONLY);
     if (file == NULL) {
         terminal_writestring("Error opening file.\n");
         return;
@@ -101,6 +103,19 @@ static void cmd_cat(int argc, char** argv) {
 
     char buffer[256];
     if (fs_read(file, buffer, sizeof(buffer)) > 0) {
+        if (redirect_output) {
+            file_t* redirect_file = fs_open(redirect_filename, O_CREAT | O_WRONLY);
+            if (redirect_file == NULL) {
+                terminal_writestring("Error opening redirect file.\n");
+                fs_close(file);
+                terminal_writestring("\n");
+                return;
+            }
+            fs_write(redirect_file, buffer, strlen(buffer));
+            fs_close(redirect_file);
+            
+            redirect_output = false; // Reset redirection flag
+        }
         terminal_writestring(buffer);
     }
 
@@ -194,6 +209,17 @@ void shell_process_command(char* command_line) {
     int argc = 0;
     char* argv[MAX_ARGS];
 
+    // check if > redirection is requested
+    char* redirect_pos = strchr(command_line, '>');
+    redirect_output = (redirect_pos != NULL);
+    if (redirect_pos != NULL) {
+        *redirect_pos = '\0';
+        redirect_pos++;
+        while (*redirect_pos == ' ') redirect_pos++;
+        strncpy(redirect_filename, redirect_pos, sizeof(redirect_filename) - 1);
+        redirect_filename[sizeof(redirect_filename) - 1] = '\0';
+    }
+
     parse_command(command_line, &argc, argv);
 
     if (argc == 0) return;
@@ -205,6 +231,19 @@ void shell_process_command(char* command_line) {
             return;
         }
         current = current->next;
+    }
+
+    // Check if command is a file to be executed
+    file_t* file = fs_open(argv[0], O_RDONLY);
+    if (file != NULL) {
+        // For simplicity, just display file contents
+        char buffer[256];
+        if (fs_read(file, buffer, sizeof(buffer)) > 0) {
+            terminal_writestring(buffer);
+            terminal_writestring("\n");
+        }
+        fs_close(file);
+        return;
     }
 
     terminal_writestring("Unknown command: ");
