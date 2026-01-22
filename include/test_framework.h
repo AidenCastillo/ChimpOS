@@ -54,5 +54,6 @@ void suite_tear_down(test_suite_t* suite);
 void run_test_by_name(const char* suite_name);
 void run_test_suite(test_suite_t* suite);
 void run_all_tests(void);
+int run_test_case(test_case_t* test);
 
 #endif // TEST_FRAMEWORK_H

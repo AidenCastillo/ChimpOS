@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include "memory.h"
 
 // Returns the length of a string
 size_t strlen(const char* str) 

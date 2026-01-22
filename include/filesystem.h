@@ -54,6 +54,8 @@ int fs_write(file_t* file, const void* buffer, size_t size);
 int fs_rename(file_t* file, const char* new_name);
 int fs_delete(file_t* file);
 
+file_t** fs_list_files(size_t * count);
+
 typedef enum {
     FS_TYPE_RAMDISK,
     FS_TYPE_HARDDRIVE
