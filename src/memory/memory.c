@@ -133,7 +133,7 @@ void heap_free(void *ptr) {
     }
 }
 
-void memcpy(void *to, void *from, uint32_t numBytes) {
+void memcpy(void *to, const void *from, uint32_t numBytes) {
     uint8_t *dst = (uint8_t *)to;
     uint8_t *src = (uint8_t *)from;
     for (uint32_t i = 0; i < numBytes; i++) {

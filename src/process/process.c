@@ -5,6 +5,7 @@
 #include "memory.h"
 #include "process.h"
 #include "clone.h"
+#include "common.h"
 
 static process_t* current_process = NULL;
 
@@ -19,6 +20,7 @@ process_t* process_init(void) {
     current_process->parent = NULL;
     current_process->children = NULL;
     current_process->state = 1; // running
+    return current_process;
 }
 
 static uint32_t get_next_pid(void) {
@@ -36,10 +38,11 @@ process_t* process_create_on_node(process_t* parent, uint32_t priority, void (*e
     new_process->parent = parent;
     new_process->children = NULL;
     new_process->state = 0;
+    new_process->function = entry_point;
     return new_process;
 }
 
-void process_destroy(uint32_t pid) {
+void process_destroy(UNUSED uint32_t pid) {
     // Destroy a process
 }
 
@@ -68,6 +71,7 @@ int process_wake(process_t* process) {
     if (process->state == 0) {
         process->state = 1;
         err = 0;
+        process->err = err;
         void* stack = heap_malloc(4096);
         int flags = CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND | CLONE_THREAD | CLONE_PARENT_SETTID | CLONE_CHILD_CLEARTID;
 

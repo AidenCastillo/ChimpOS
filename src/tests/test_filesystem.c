@@ -4,6 +4,7 @@
 #include "terminal.h"
 #include "memory.h"
 #include "debug.h"
+#include "common.h"
 
 
 static int test_fs_init(void) {
@@ -41,7 +42,7 @@ static bool test_fs_read(void) {
         return false; // Open failed
     }
 
-    int bytes_written = fs_write(file, "Test data for RAM disk", 25);
+    UNUSED int bytes_written = fs_write(file, "Test data for RAM disk", 25);
 
     char buffer[128];
     int bytes_read = fs_read(file, buffer, sizeof(buffer));
@@ -196,23 +197,23 @@ static bool test_fs_rename_file(void) {
     return true; // Rename successful
 }
 
-static bool test_fs_copy_file(void) {
+UNUSED static bool test_fs_copy_file(void) {
     return false;
 }
 
-static bool test_fs_check_file_exists(void) {
+UNUSED static bool test_fs_check_file_exists(void) {
     return false;
 }
 
-static bool test_fs_get_file_size(void) {
+UNUSED static bool test_fs_get_file_size(void) {
     return false;
 }
 
-static bool test_fs_get_file_flags(void) {
+UNUSED static bool test_fs_get_file_flags(void) {
     return false;
 }
 
-static bool test_fs_set_file_flags(void) {
+UNUSED static bool test_fs_set_file_flags(void) {
     return false;
 }
 
@@ -232,7 +233,7 @@ void register_filesystem_tests(void) {
     add_test_case(suite, "fs_delete_file", "Tests deleting a file in the filesystem", test_fs_delete_file);
     add_test_case(suite, "fs_list_files", "Tests listing files in the filesystem", test_fs_list_files);
     // add_test_case(suite, "fs_get_file_info", "Tests getting file information from the filesystem", fs_get_file_info);
-    // add_test_case(suite, "fs_rename_file", "Tests renaming a file in the filesystem", test_fs_rename_file);
+    add_test_case(suite, "fs_rename_file", "Tests renaming a file in the filesystem", test_fs_rename_file);
     // add_test_case(suite, "fs_copy_file", "Tests copying a file in the filesystem", test_fs_copy_file);
     // add_test_case(suite, "fs_move_file", "Tests moving a file in the filesystem", fs_move_file);
     // add_test_case(suite, "fs_check_space", "Tests checking available space in the filesystem", fs_check_space);

@@ -13,14 +13,13 @@
 #define ENOSPC -10 // No space left on device
 #define EAGAIN -11 // Resource temporarily unavailable
 #define ENOMEM -12  // Out of memory
-#define EILSEQ -13 // Illegal byte sequence
+#define EILSEQ -84 // Illegal byte sequence
 #define EFAULT -14 // Bad address
 #define ENOTDIR -15 // Not a directory
 #define ENAMETOOLONG -16 // File name too long
 #define ELOOP -17 // Too many symbolic links
 #define ENOSYS -18 // Function not implemented
 #define ENOTEMPTY -19 // Directory not empty
-#define EILSEQ -20 // Illegal byte sequence
 #define EFBIG -21 // File too large
 #define EINVAL -22  // Invalid argument
 #define EROFS -23 // Read-only file system

@@ -11,6 +11,8 @@ typedef struct process_t {
     int state; // waiting=0, running=1, stopped=2
     void (*function)(void); // Function to execute
     // Other process-related information
+    int flag;
+    int err;
 } process_t;
 
 process_t* process_init(void); // Initialize process management

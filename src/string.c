@@ -17,7 +17,7 @@ size_t strlen(const char* str)
 
 // Returns 0 if both string are equal.
 // Returns -1 otherwise.
-int strcmp(char* str1, char* str2) {
+int strcmp(const char* str1, const char* str2) {
 	if (strlen(str1) != strlen(str2)) {
 		return -1;
 	}
