@@ -26,6 +26,29 @@ int fs_init(void) {
     // Initialize the selected filesystem
     current_fs_ops->init();
 
+    // Add helloWorld binary to filesystem
+    file_t* prog = fs_open("helloworld", O_CREAT | O_WRONLY);
+    if (prog) {
+        extern uint8_t helloWorld_bin_start[];
+        extern uint8_t helloWorld_bin_end[];
+        size_t prog_size = (size_t)(helloWorld_bin_end - helloWorld_bin_start);
+        current_fs_ops->write(prog, helloWorld_bin_start, prog_size);
+        current_fs_ops->close(prog);
+    } else {
+        return -1; // Error creating test program
+    }
+
+    file_t* term_prog = fs_open("terminalProg", O_CREAT | O_WRONLY);
+    if (term_prog) {
+        extern uint8_t terminalProg_bin_start[];
+        extern uint8_t terminalProg_bin_end[];
+        size_t term_prog_size = (size_t)(terminalProg_bin_end - terminalProg_bin_start);
+        current_fs_ops->write(term_prog, terminalProg_bin_start, term_prog_size);
+        current_fs_ops->close(term_prog);
+    } else {
+        return -1; // Error creating test program
+    }
+
     return 0;
 }
 

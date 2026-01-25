@@ -2,6 +2,7 @@
 #define PROCESS_H
 
 #include <stdint.h>
+#include <stddef.h>
 
 typedef struct process_t {
     uint32_t pid;
@@ -21,5 +22,6 @@ void process_destroy(uint32_t pid); // Destroy a process
 void process_schedule(void); // Schedule processes - simple round-robin or priority-based
 process_t* process_get_current(void); // Get the currently running process
 int process_wake(process_t* process); // Wake up a sleeping process
+int exec_binary(void* binary_code, size_t size); // Execute a binary in simple single-threaded mode
 
 #endif // PROCESS_H

@@ -5,6 +5,7 @@
 #include "test_framework.h"
 #include "memory.h"
 #include "filesystem.h"
+#include "process.h"
 static command_list_t command_list = {NULL, 0};
 // static int command_count = 0;
 char* SHELL_HISTORY[SHELL_HISTORY_SIZE];
@@ -176,6 +177,45 @@ static void cmd_ls(UNUSED int argc, UNUSED char** argv) {
     }
 }
 
+static void cmd_exec(int argc, char** argv) {
+    if (argc < 2) {
+        terminal_writestring("Usage: exec <binary_file>\n");
+        return;
+    }
+
+    char* filename = argv[1];
+    file_t* file = fs_open(filename, O_RDONLY);
+    if (file == NULL) {
+        terminal_writestring("Error: cannot open file '" );
+        terminal_writestring(filename);
+        terminal_writestring("'\n");
+        return;
+    }
+
+    // Read the binary into memory
+    char buffer[4096];
+    int bytes_read = fs_read(file, buffer, sizeof(buffer));
+    fs_close(file);
+
+    if (bytes_read <= 0) {
+        terminal_writestring("Error: cannot read file\n");
+        return;
+    }
+
+    terminal_writestring("Executing ");
+    terminal_writestring(filename);
+    terminal_writestring("...\n");
+
+    // Execute the binary
+    int result = exec_binary(buffer, bytes_read);
+    
+    char result_buf[32];
+    terminal_writestring("Process exited with code: ");
+    itoa(result, result_buf, 10);
+    terminal_writestring(result_buf);
+    terminal_writestring("\n");
+}
+
 void shell_initialize(void) {
 
     shell_register_command("help", shell_help, "Display this help message");
@@ -188,6 +228,7 @@ void shell_initialize(void) {
     shell_register_command("touch", cmd_touch, "Create an empty file or updates file timestamps");
     // shell_register_command("rm", cmd_rm, "Remove files");
     shell_register_command("ls", cmd_ls, "List directory contents");
+    shell_register_command("exec", cmd_exec, "Execute a binary file");
     // shell_register_command("mkdir", cmd_mkdir, "Create a new directory");
     // shell_register_command("rmdir", cmd_rmdir, "Remove a directory");
     // shell_register_command("cd", cmd_cd, "Change the current directory");

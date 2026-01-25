@@ -83,3 +83,17 @@ int process_wake(process_t* process) {
 process_t* process_get_current(void) {
     return current_process;
 }
+
+// We are just changing the function pointer to execute the binary code directly
+// TODO: In a real OS, this would involve loading the binary into memory,
+// setting up the process's address space, stack, registers, etc.
+int exec_binary(void* binary_code, size_t size) {
+    if (binary_code == NULL || size == 0) {
+        return -1;
+    }
+    
+    int (*entry_point)(void) = (int (*)(void))binary_code;
+    int result = entry_point();
+    
+    return result;
+}
