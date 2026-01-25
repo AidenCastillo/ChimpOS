@@ -12,5 +12,6 @@ void itoa(int num, char* str, uint32_t base);
 void strncpy(char* dest, const char* src, size_t n);
 char* strdup(const char* str);
 char* strchr(const char* str, char c);
+void strcat(char* dest, const char* src);
 
 #endif

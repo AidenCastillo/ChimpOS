@@ -61,13 +61,29 @@ static void shell_help(UNUSED int argc, UNUSED char** argv) {
 }
 
 static void shell_echo(int argc, char** argv) {
-    for (int i = 1; i < argc; i++) {
-        terminal_writestring(argv[i]);
-        if (i < argc - 1) {
-            terminal_writestring(" ");
-        }
+    if (argc < 2) {
+        terminal_writestring("Usage: echo \"text\"\n");
+        return;
     }
-    terminal_writestring("\n");
+
+    char* text = argv[1];
+
+    if (redirect_output) {
+        file_t* redirect_file = fs_open(redirect_filename, O_CREAT | O_WRONLY);
+        if (redirect_file == NULL) {
+            terminal_writestring("Error opening redirect file.\n");
+            redirect_output = false;
+            return;
+        }
+        fs_write(redirect_file, text, strlen(text));
+        // fs_write(redirect_file, "\n", 1);
+        fs_close(redirect_file);
+        
+        redirect_output = false; // Reset redirection flag
+    } else {
+        terminal_writestring(text);
+        terminal_writestring("\n");
+    }
 }
 
 static void cmd_history() {
@@ -184,12 +200,46 @@ void shell_initialize(void) {
 
 void parse_command(char* command_line, int* argc, char** argv) {
     *argc = 0;
-    char* token = strtok(command_line, " ");
-
-    while (token && *argc < MAX_ARGS) {
-        argv[*argc] = token;
-        (*argc)++;
-        token = strtok(NULL, " ");
+    char* current = command_line;
+    
+    while (*current && *argc < MAX_ARGS) {
+        // Skip leading spaces
+        while (*current == ' ') {
+            current++;
+        }
+        
+        if (*current == '\0') break;
+        
+        if (*current == '"') {
+            // Handle quoted string
+            current++;
+            argv[*argc] = current;
+            (*argc)++;
+            
+            // Find closing quote
+            while (*current && *current != '"') {
+                current++;
+            }
+            
+            if (*current == '"') {
+                *current = '\0';
+                current++;
+            }
+        } else {
+            // Handle unquoted token
+            argv[*argc] = current;
+            (*argc)++;
+            
+            // Find next space
+            while (*current && *current != ' ') {
+                current++;
+            }
+            
+            if (*current == ' ') {
+                *current = '\0';
+                current++;
+            }
+        }
     }
 }
 
@@ -236,11 +286,20 @@ void shell_process_command(char* command_line) {
     // Check if command is a file to be executed
     file_t* file = fs_open(argv[0], O_RDONLY);
     if (file != NULL) {
-        // For simplicity, just display file contents
-        char buffer[256];
-        if (fs_read(file, buffer, sizeof(buffer)) > 0) {
-            terminal_writestring(buffer);
-            terminal_writestring("\n");
+        // parse name for .sh extension and execute as script
+        char* ext = strchr(argv[0], '.');
+        if (ext != NULL && strcmp(ext, ".sh") == 0) {
+            char buffer[512];
+            if (fs_read(file, buffer, sizeof(buffer) - 1) > 0) {
+                buffer[sizeof(buffer) - 1] = '\0';
+                char* line = strtok(buffer, "\n");
+                while (line != NULL) {
+                    shell_process_command(line);
+                    line = strtok(NULL, "\n");
+                }
+            }
+            fs_close(file);
+            return;
         }
         fs_close(file);
         return;
