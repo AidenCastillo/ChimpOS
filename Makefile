@@ -52,43 +52,35 @@ KERNEL = kernel.bin
 ISO = os.iso
 
 # Default target
-all: iso
+all: iso 
 
-# Build helloWorld.bin from source
-helloWorld.bin: src/bin/helloWorld.c
-	$(CC) -c -ffreestanding -O2 -fno-pic -Iinclude $< -o helloWorld.o
-	@if $(OBJCOPY) --help | grep -q 'dump-section'; then \
-		if i386-elf-objdump -h helloWorld.o | grep -q ".text.startup"; then \
-			$(OBJCOPY) -O binary -j .text.startup helloWorld.o $@; \
-		else \
-			$(OBJCOPY) -O binary -j .text helloWorld.o $@; \
-		fi; \
+# Find all user programs in src/bin/
+BIN_SOURCES := $(wildcard src/bin/*.c)
+BIN_BINS := $(patsubst src/bin/%.c,$(BUILD_DIR)/%.bin,$(BIN_SOURCES))
+BIN_OBJS := $(patsubst src/bin/%.c,$(BUILD_DIR)/%.bin.o,$(BIN_SOURCES))
+
+# Generic rule to build any .bin from src/bin/*.c
+$(BUILD_DIR)/%.bin: src/bin/%.c | $(BUILD_DIR)
+	$(CC) -c -ffreestanding -O2 -fno-pic -Iinclude $< -o $(BUILD_DIR)/$*.o
+	@if i386-elf-objdump -h $(BUILD_DIR)/$*.o | grep -q ".text.startup"; then \
+		$(OBJCOPY) -O binary -j .text.startup $(BUILD_DIR)/$*.o $@; \
 	else \
-		if i386-elf-objdump -h helloWorld.o | grep -q ".text.startup"; then \
-			$(OBJCOPY) -O binary -j .text.startup helloWorld.o $@; \
-		else \
-			$(OBJCOPY) -O binary -j .text helloWorld.o $@; \
-		fi; \
+		$(OBJCOPY) -O binary -j .text $(BUILD_DIR)/$*.o $@; \
 	fi
 	@if [ ! -s $@ ]; then \
 		echo "Warning: $@ is empty, trying full binary extraction..."; \
-		$(OBJCOPY) -O binary helloWorld.o $@; \
+		$(OBJCOPY) -O binary $(BUILD_DIR)/$*.o $@; \
 	fi
-	@rm -f helloWorld.o
+	@rm -f $(BUILD_DIR)/$*.o
 
-# Build terminalProg.bin from source
-terminalProg.bin: src/bin/terminalProg.c
-	$(CC) -c -ffreestanding -O2 -fno-pic -Iinclude $< -o terminalProg.o
-	@if i386-elf-objdump -h terminalProg.o | grep -q ".text.startup"; then \
-		$(OBJCOPY) -O binary -j .text.startup terminalProg.o $@; \
-	else \
-		$(OBJCOPY) -O binary -j .text terminalProg.o $@; \
-	fi
-	@if [ ! -s $@ ]; then \
-		echo "Warning: $@ is empty, trying full binary extraction..."; \
-		$(OBJCOPY) -O binary terminalProg.o $@; \
-	fi
-	@rm -f terminalProg.o
+# Generic rule to convert .bin to .bin.o with proper symbol renaming
+$(BUILD_DIR)/%.bin.o: $(BUILD_DIR)/%.bin | $(BUILD_DIR)
+	$(OBJCOPY) -I binary -O elf32-i386 -B i386 \
+		--rename-section .data=.rodata,alloc,load,readonly,data,contents \
+		--redefine-sym _binary_build_$*_bin_start=$*_bin_start \
+		--redefine-sym _binary_build_$*_bin_end=$*_bin_end \
+		--redefine-sym _binary_build_$*_bin_size=$*_bin_size \
+		$< $@
 # Assemble bootloader (assume boot.s is at project root)
 $(BUILD_DIR)/boot.o: boot.s | $(BUILD_DIR)
 	$(AS) boot.s -o $@
@@ -102,27 +94,9 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.s
 	$(AS) $(ASFLAGS) $< -o $@
 
-# Convert helloWorld.bin to object file for embedding
-# Required for filesystem to have start and end symbols
-$(BUILD_DIR)/helloWorld.bin.o: helloWorld.bin | $(BUILD_DIR)
-	$(OBJCOPY) -I binary -O elf32-i386 -B i386 \
-		--rename-section .data=.rodata,alloc,load,readonly,data,contents \
-		--redefine-sym _binary_helloWorld_bin_start=helloWorld_bin_start \
-		--redefine-sym _binary_helloWorld_bin_end=helloWorld_bin_end \
-		--redefine-sym _binary_helloWorld_bin_size=helloWorld_bin_size \
-		$< $@
-
-$(BUILD_DIR)/terminalProg.bin.o: terminalProg.bin | $(BUILD_DIR)
-	$(OBJCOPY) -I binary -O elf32-i386 -B i386 \
-		--rename-section .data=.rodata,alloc,load,readonly,data,contents \
-		--redefine-sym _binary_terminalProg_bin_start=terminalProg_bin_start \
-		--redefine-sym _binary_terminalProg_bin_end=terminalProg_bin_end \
-		--redefine-sym _binary_terminalProg_bin_size=terminalProg_bin_size \
-		$< $@
-
 # Link everything
-$(KERNEL): $(BUILD_DIR)/boot.o $(C_OBJECTS) $(ASM_OBJECTS) $(BUILD_DIR)/helloWorld.bin.o helloWorld.bin $(BUILD_DIR)/terminalProg.bin.o terminalProg.bin
-	$(LD) -T linker.ld -o $(KERNEL) $(LDFLAGS) $(BUILD_DIR)/boot.o $(C_OBJECTS) $(ASM_OBJECTS) $(BUILD_DIR)/helloWorld.bin.o $(BUILD_DIR)/terminalProg.bin.o -lgcc
+$(KERNEL): $(BUILD_DIR)/boot.o $(C_OBJECTS) $(ASM_OBJECTS) $(BIN_OBJS) $(BIN_BINS)
+	$(LD) -T linker.ld -o $(KERNEL) $(LDFLAGS) $(BUILD_DIR)/boot.o $(C_OBJECTS) $(ASM_OBJECTS) $(BIN_OBJS) -lgcc
 
 # Create ISO with GRUB
 iso: $(KERNEL)

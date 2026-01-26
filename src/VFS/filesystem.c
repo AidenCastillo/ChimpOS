@@ -2,6 +2,7 @@
 #include "filesystem.h"
 #include "string.h"
 #include "errno.h"
+#include "programs.h"
 
 fs_type_t current_fs_type = FS_TYPE_RAMDISK;  // Default
 fs_operations_t* current_fs_ops = NULL;
@@ -26,27 +27,16 @@ int fs_init(void) {
     // Initialize the selected filesystem
     current_fs_ops->init();
 
-    // Add helloWorld binary to filesystem
-    file_t* prog = fs_open("helloworld", O_CREAT | O_WRONLY);
-    if (prog) {
-        extern uint8_t helloWorld_bin_start[];
-        extern uint8_t helloWorld_bin_end[];
-        size_t prog_size = (size_t)(helloWorld_bin_end - helloWorld_bin_start);
-        current_fs_ops->write(prog, helloWorld_bin_start, prog_size);
-        current_fs_ops->close(prog);
-    } else {
-        return -1; // Error creating test program
-    }
-
-    file_t* term_prog = fs_open("terminalProg", O_CREAT | O_WRONLY);
-    if (term_prog) {
-        extern uint8_t terminalProg_bin_start[];
-        extern uint8_t terminalProg_bin_end[];
-        size_t term_prog_size = (size_t)(terminalProg_bin_end - terminalProg_bin_start);
-        current_fs_ops->write(term_prog, terminalProg_bin_start, term_prog_size);
-        current_fs_ops->close(term_prog);
-    } else {
-        return -1; // Error creating test program
+    // Load all user programs from the programs table
+    for (int i = 0; programs[i].name != NULL; i++) {
+        file_t* prog = fs_open(programs[i].name, O_CREAT | O_WRONLY);
+        if (prog) {
+            size_t prog_size = (size_t)(programs[i].end - programs[i].start);
+            current_fs_ops->write(prog, programs[i].start, prog_size);
+            current_fs_ops->close(prog);
+        } else {
+            return -1; // Error creating program file
+        }
     }
 
     return 0;
