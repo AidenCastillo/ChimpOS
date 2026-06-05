@@ -5,6 +5,16 @@
 .set MAGIC,    0x1BADB002       /* 'magic number' lets bootloader find the header */
 .set CHECKSUM, -(MAGIC + FLAGS) /* checksum of above, to prove we are multiboot */
 
+/* Graphics mode information (shared between real mode setup and protected mode kernel) */
+.section .data
+.align 4
+graphics_info:
+    .long 0      /* width */
+    .long 0      /* height */
+    .long 0      /* pitch (bytes per line) */
+    .byte 0      /* bits per pixel */
+    .byte 0      /* mode set flag */
+
 /* 
 Declare a multiboot header that marks the program as a kernel. These are magic
 values that are documented in the multiboot standard. The bootloader will
@@ -76,6 +86,9 @@ _start:
 	runtime support to work as well.
 	*/
 
+	/* Graphics mode is set by attempting real mode BIOS call */
+	call setup_graphics_mode
+	
 	/*
 	Enter the high-level kernel. The ABI requires the stack is 16-byte
 	aligned at the time of the call instruction (which afterwards pushes
@@ -101,6 +114,33 @@ _start:
 	cli
 1:	hlt
 	jmp 1b
+
+/*
+=============================================================================
+Graphics Setup Code
+=============================================================================
+Attempts to initialize graphics mode. In a multiboot/protected mode 
+environment, we use a simplified approach targeting standard modes.
+*/
+
+.align 4
+.code32
+setup_graphics_mode:
+	push %ebp
+	mov %esp, %ebp
+	
+	/* Simply return - graphics will be accessed via 0xA0000 */
+	/* In a real implementation, you would either:
+	   1. Use a bootloader that sets graphics mode before loading kernel
+	   2. Implement full BIOS interface via V86 mode (complex)
+	   3. Use UEFI GOP (UEFI Specification)
+	   
+	   For this demo, we'll just use the standard VGA memory at 0xA0000
+	   which is already available in most VMs/emulators.
+	*/
+	
+	pop %ebp
+	ret
 
 /*
 Set the size of the _start symbol to the current location '.' minus its start.

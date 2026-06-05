@@ -6,6 +6,7 @@
 #include "memory.h"
 #include "filesystem.h"
 #include "process.h"
+#include "graphics.h"
 static command_list_t command_list = {NULL, 0};
 // static int command_count = 0;
 char* SHELL_HISTORY[SHELL_HISTORY_SIZE];
@@ -85,6 +86,17 @@ static void shell_echo(int argc, char** argv) {
         terminal_writestring(text);
         terminal_writestring("\n");
     }
+}
+
+/* Forward declaration of graphics demo */
+void graphics_demo(void);
+
+static void cmd_graphics(int argc, char** argv) {
+    (void)argc;
+    (void)argv;
+    terminal_writestring("Entering graphics mode (320x200)...\n");
+    terminal_writestring("Demo will display for a few seconds.\n");
+    graphics_demo();
 }
 
 static void cmd_history() {
@@ -212,6 +224,7 @@ static void cmd_exec(int argc, char** argv) {
     char result_buf[32];
     terminal_writestring("Process exited with code: ");
     itoa(result, result_buf, 10);
+    shell_register_command("graphics", cmd_graphics, "Display graphics mode demo");
     terminal_writestring(result_buf);
     terminal_writestring("\n");
 }
@@ -229,6 +242,7 @@ void shell_initialize(void) {
     // shell_register_command("rm", cmd_rm, "Remove files");
     shell_register_command("ls", cmd_ls, "List directory contents");
     shell_register_command("exec", cmd_exec, "Execute a binary file");
+    shell_register_command("graphics", cmd_graphics, "Display graphics mode demo");
     // shell_register_command("mkdir", cmd_mkdir, "Create a new directory");
     // shell_register_command("rmdir", cmd_rmdir, "Remove a directory");
     // shell_register_command("cd", cmd_cd, "Change the current directory");

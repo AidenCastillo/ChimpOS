@@ -4,6 +4,7 @@
 
 #include "terminal.h"
 #include "string.h"
+#include "graphics.h"
 
 
 /* Check if the compiler thinks you are targeting the wrong operating system. */
@@ -49,23 +50,31 @@ void terminal_initialize(void)
 	terminal_row = 0;
 	terminal_column = 0;
 	terminal_color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
-	terminal_buffer = (uint16_t*)VGA_MEMORY;
-
-	for (size_t y = 0; y < VGA_HEIGHT; y++) {
-		for (size_t x = 0; x < VGA_WIDTH; x++) {
-			const size_t index = y * VGA_WIDTH + x;
-			terminal_buffer[index] = vga_entry(' ', terminal_color);
-			current_screen_buffer[index] = vga_entry(' ', terminal_color);
-		}
-	}
+	// terminal_buffer = (uint16_t*)VGA_MEMORY;
+	
+	
+	// for (size_t y = 0; y < VGA_HEIGHT; y++) {
+		// 	for (size_t x = 0; x < VGA_WIDTH; x++) {
+			// 		const size_t index = y * VGA_WIDTH + x;
+	// 		terminal_buffer[index] = vga_entry(' ', terminal_color);
+	// 		current_screen_buffer[index] = vga_entry(' ', terminal_color);
+	// 	}
+	// }
 	
 	// Initialize history buffer
-	for (size_t i = 0; i < HISTORY_LINES * VGA_WIDTH; i++) {
-		screen_history[i] = vga_entry(' ', terminal_color);
-	}
-	history_start = 0;
-	history_size = 0;
-	scroll_position = 0;
+	// for (size_t i = 0; i < HISTORY_LINES * VGA_WIDTH; i++) {
+		// 	screen_history[i] = vga_entry(' ', terminal_color);
+		// }
+	// history_start = 0;
+	// history_size = 0;
+	// scroll_position = 0;
+
+	// Since we are staying in graphics mode now, we need to maintain our own buffer for the text content and manually render this to the screen.
+	graphics_clear_screen(0);  // Clear graphics screen to black
+	terminal_buffer = current_graphics_mode.frame_buffer;
+
+	terminal_writestring("Welcome to ChimpOS!\n");
+
 }
 
 void terminal_initialize_history(void) {
@@ -119,7 +128,8 @@ void terminal_set_bg_color(enum vga_color bg)
 void terminal_putentryat(char c, uint8_t color, size_t x, size_t y) 
 {
 	const size_t index = y * VGA_WIDTH + x;
-	terminal_buffer[index] = vga_entry(c, color);
+	// terminal_buffer[index] = vga_entry(c, color);
+	graphics_draw_char_8x8(c, x * 8, y * 8, color);
 }
 
 void save_screen_to_history(void) {
@@ -415,6 +425,7 @@ void terminal_write(const char* data, size_t size)
 void terminal_writestring(const char* data) 
 {
 	terminal_write(data, strlen(data));
+	graphics_swap_buffers();
 }
 
 void terminal_clear(void) {
