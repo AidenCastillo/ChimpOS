@@ -17,33 +17,34 @@ void graphics_demo(void);
 void kernel_main(void) 
 {
 	/* Initializations */
-	graphics_demo();
-	terminal_initialize();
-	// terminal_writestring("Kernel initializing...\n");
 	heap_initialize();
+	// graphics_demo();
+	graphics_initialize();
+	terminal_initialize();
+	terminal_writestring("Kernel initializing...\n");
 	debug_init();
 
-	// if (fs_init()) {
-	// 	LOG_ERROR("Filesystem initialization failed");
-	// }
+	if (fs_init()) {
+		LOG_ERROR("Filesystem initialization failed");
+	}
 	
-	// shell_initialize();
-	// test_framework_init();
+	shell_initialize();
+	test_framework_init();
 
-	// int ran_tests = 0;
+	int ran_tests = 0;
 
-	// while (true) {
-	// 	if (DEBUG && ran_tests == 0) {
-	// 		shell_process_command("test");
-	// 		ran_tests = 1;
-	// 	}
-	// 	terminal_writestring("user@host:/$ ");
-	// 	terminal_save_position();
+	while (true) {
+		if (DEBUG && ran_tests == 0) {
+			shell_process_command("test");
+			ran_tests = 1;
+		}
+		terminal_writestring("user@host:/$ ");
+		terminal_save_position();
 		
 		
-	// 	char line[100];
-	// 	read_line(line, 100);
-	// 	shell_process_command(line);
-	// }
+		char line[100];
+		read_line(line, 100);
+		shell_process_command(line);
+	}
 
 }

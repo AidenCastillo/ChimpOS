@@ -88,15 +88,14 @@ static void shell_echo(int argc, char** argv) {
     }
 }
 
-/* Forward declaration of graphics demo */
-void graphics_demo(void);
-
 static void cmd_graphics(int argc, char** argv) {
     (void)argc;
     (void)argv;
     terminal_writestring("Entering graphics mode (320x200)...\n");
     terminal_writestring("Demo will display for a few seconds.\n");
     graphics_demo();
+    // Dont exit graphics mode immediately to give user time to see it
+    // for (volatile int i = 0; i < 1000000000; i++);
 }
 
 static void cmd_history() {

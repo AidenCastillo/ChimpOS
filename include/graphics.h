@@ -24,6 +24,23 @@ extern graphics_mode_t current_graphics_mode;
 extern uint8_t* front_buffer;
 extern uint8_t* back_buffer;
 
+#define BLACK 0
+#define BLUE 1
+#define GREEN 2
+#define CYAN 3
+#define RED 4
+#define MAGENTA 5
+#define BROWN 6
+#define LIGHT_GREY 7
+#define DARK_GREY 8
+#define LIGHT_BLUE 9
+#define LIGHT_GREEN 10
+#define LIGHT_CYAN 11
+#define LIGHT_RED 12
+#define LIGHT_MAGENTA 13
+#define LIGHT_BROWN 14
+#define WHITE 15
+
 // Source - https://stackoverflow.com/a/23130671
 // Posted by nimbus_debug
 // Retrieved 2026-06-04, License - CC BY-SA 3.0

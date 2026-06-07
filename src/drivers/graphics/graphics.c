@@ -300,19 +300,18 @@ unsigned char bit6_letters[95][6] = {
 
 
 graphics_mode_t current_graphics_mode = {
-    .width = 320,
-    .height = 200,
-    .pitch = 320,
-    .bpp = 8,
-    .frame_buffer = 0xA0000,
-    .mode = 1
+    .width = 320, // 320 pixels wide
+    .height = 200, // 200 pixels tall
+    .pitch = 320, // 320 bytes per scanline (1 byte per pixel)
+    .bpp = 8, // 8 bits per pixel (256 colors)
+    .frame_buffer = 0xA0000, // VGA graphics memory address
+    .mode = 1 /* 1 for graphics mode, 0 for text mode */
 };
 
-/* Pointer to the real screen (Front Buffer) */
+// Front buffer for double buffering
 uint8_t* front_buffer = NULL;
-
-/* Pointer to the hidden drawing space (Back Buffer) */
-uint8_t* back_buffer = NULL;
+// Back buffer in system memory
+uint8_t* back_buffer = NULL; // Will be allocated during graphics initialization
 
 /* Keep track of buffer size */
 uint32_t buffer_size = 0;
@@ -592,20 +591,19 @@ static void set_vga_mode_13()
     outb(0x3C0, 0x20); /* Enable display */
 }
 
-void graphics_init_buffers() {
-    front_buffer = (uint8_t*)current_graphics_mode.frame_buffer;
-    buffer_size = current_graphics_mode.height * current_graphics_mode.pitch;
+void graphics_init_buffers(void)
+{
+        buffer_size = current_graphics_mode.width * current_graphics_mode.height;
 
-    /* 
-     * Allocate memory for the back buffer. 
-     * Replace 'kmalloc' with whatever memory allocation function your kernel uses.
-     */
-    back_buffer = (uint8_t*)heap_malloc(buffer_size);
-    
-    // Clear back buffer to black initially
-    for (uint32_t i = 0; i < buffer_size; i++) {
-        back_buffer[i] = 0;
-    }
+        front_buffer = (uint8_t*)current_graphics_mode.frame_buffer;
+
+        back_buffer = (uint8_t*)heap_malloc(buffer_size);
+
+        if (!back_buffer) {
+            return;
+        }
+
+        memset(back_buffer, 0, buffer_size);
 }
 
 void graphics_initialize(void)
@@ -613,6 +611,8 @@ void graphics_initialize(void)
     /* Set VGA mode 0x13 using I/O ports */
     set_vga_mode_13();
     graphics_init_buffers();
+    graphics_clear_screen(BLACK);
+    graphics_swap_buffers();
 }
 
 void graphics_swap_buffers(void)
@@ -621,42 +621,29 @@ void graphics_swap_buffers(void)
         return;
     }
 
-    /*
-     * Copy everything from back to front.
-     * If you have a custom optimized 'memcpy' function in your OS, use it here.
-     */
-    for (uint32_t i = 0; i < buffer_size; i++) {
-        front_buffer[i] = back_buffer[i];
-    }
+    memcpy(front_buffer, back_buffer, buffer_size);
 }
 
 
 void graphics_set_pixel(uint32_t x, uint32_t y, uint8_t color)
 {
-    // Bounds check
-    if (x >= current_graphics_mode.width || y >= current_graphics_mode.height) {
-        return;
-    }
-    
-    // Safety check in case initialization hasn't happened
-    if (!back_buffer) {
-        return;
-    }
-    
-    // Calculate offset and write to the hidden buffer
-    uint32_t offset = y * current_graphics_mode.pitch + x;
-    back_buffer[offset] = color;
+    back_buffer[y * 320 + x] = color;
 }
 
 
 void graphics_clear_screen(uint8_t color)
 {
-    uint8_t* framebuffer = (uint8_t*)current_graphics_mode.frame_buffer;
-    uint32_t pixels = current_graphics_mode.width * current_graphics_mode.height;
+    // uint8_t* framebuffer = (uint8_t*)current_graphics_mode.frame_buffer;
+    // uint32_t pixels = current_graphics_mode.width * current_graphics_mode.height;
     
-    /* Simple memory fill - no memset needed */
-    for (uint32_t i = 0; i < pixels; i++) {
-        framebuffer[i] = color;
+    // for (uint32_t i = 0; i < pixels; i++) {
+    //     framebuffer[i] = color;
+    // }
+    // memset(back_buffer, color, buffer_size);
+     for (uint32_t y = 0; y < current_graphics_mode.height; y++) {
+        for (uint32_t x = 0; x < current_graphics_mode.width; x++) {
+            graphics_set_pixel(x, y, color);
+        }
     }
 }
 

@@ -5,12 +5,13 @@
 void graphics_demo(void)
 {
     /* Initialize graphics system - sets mode 0x13 */
-    graphics_initialize();
+    // graphics_initialize();
     
     /* Clear screen to black */
-    graphics_clear_screen(0);
+    graphics_clear_screen(BLACK);
+
     
-    /* Fill top third with red */
+    // /* Fill top third with red */
     for (int y = 0; y < 66; y++) {
         for (int x = 0; x < 320; x++) {
             graphics_set_pixel(x, y, 4);  /* Red */
@@ -24,18 +25,20 @@ void graphics_demo(void)
         }
     }
     
-    /* Fill bottom third with blue */
+    // /* Fill bottom third with blue */
     for (int y = 133; y < 200; y++) {
         for (int x = 0; x < 320; x++) {
             graphics_set_pixel(x, y, 1);  /* Blue */
         }
     }
     
-    /* Draw white rectangle in center */
+    // /* Draw white rectangle in center */
     graphics_fill_rect(100, 75, 120, 50, 7);  /* White */
     
-    /* Draw a line across the screen */
+    // /* Draw a line across the screen */
     graphics_draw_line(0, 100, 319, 100, 15);  /* Bright white */
+    
+    graphics_swap_buffers();  /* Show the final image */
     
     /* Wait for 5 seconds with nested loop to prevent optimization */
     for (volatile int j = 0; j < 5; j++) {

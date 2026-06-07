@@ -17,21 +17,16 @@
 #error "This tutorial needs to be compiled with a ix86-elf compiler"
 #endif
 
-uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg) 
-{
-	return fg | bg << 4;
-}
+typedef struct {
+	char ch;
+	uint8_t color;
+} terminal_cell_t;
 
-static inline uint16_t vga_entry(unsigned char uc, uint8_t color) 
-{
-	return (uint16_t) uc | (uint16_t) color << 8;
-}
-
+bool initialized = false;
 size_t terminal_row;
 size_t terminal_column;
 uint8_t terminal_color;
-uint16_t* terminal_buffer = (uint16_t*)VGA_MEMORY;
-
+static terminal_cell_t terminal_buffer[ROWS][COLS];
 
 static cursor_position_t prompt_position;
 
@@ -39,42 +34,71 @@ static cursor_position_t prompt_position;
 static char* command_history[HISTORY_SIZE];
 static size_t history_count = 0;
 
-static uint16_t screen_history[HISTORY_LINES * VGA_WIDTH];
-static uint16_t current_screen_buffer[VGA_HEIGHT * VGA_WIDTH];
+static uint16_t screen_history[HISTORY_LINES * COLS];
+static uint16_t current_screen_buffer[ROWS * COLS];
 static int history_start = 0;
 static int history_size = 0;
 static int scroll_position = 0;
 
-void terminal_initialize(void) 
+static inline uint16_t vga_entry(char c, uint8_t color) 
 {
-	terminal_row = 0;
-	terminal_column = 0;
-	terminal_color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
-	// terminal_buffer = (uint16_t*)VGA_MEMORY;
-	
-	
-	// for (size_t y = 0; y < VGA_HEIGHT; y++) {
-		// 	for (size_t x = 0; x < VGA_WIDTH; x++) {
-			// 		const size_t index = y * VGA_WIDTH + x;
-	// 		terminal_buffer[index] = vga_entry(' ', terminal_color);
-	// 		current_screen_buffer[index] = vga_entry(' ', terminal_color);
-	// 	}
-	// }
-	
-	// Initialize history buffer
-	// for (size_t i = 0; i < HISTORY_LINES * VGA_WIDTH; i++) {
-		// 	screen_history[i] = vga_entry(' ', terminal_color);
-		// }
-	// history_start = 0;
-	// history_size = 0;
-	// scroll_position = 0;
+	return (uint16_t) c | (uint16_t) color << 8;
+}
 
-	// Since we are staying in graphics mode now, we need to maintain our own buffer for the text content and manually render this to the screen.
+uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg) 
+{
+	return fg | bg << 4;
+}
+
+static inline terminal_cell_t t_cell_entry(unsigned char c, uint8_t color) {
+	terminal_cell_t cell;
+	cell.ch = c;
+	cell.color = color;
+	return cell;
+}
+
+
+void terminal_initialize(void)
+{
+    terminal_row = 0;
+    terminal_column = 0;
+
+    terminal_color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
+
+	for (size_t y = 0; y < ROWS; y++) {
+		for (size_t x = 0; x < COLS; x++) {
+			terminal_buffer[y][x] = t_cell_entry(' ', LIGHT_GREY);
+		}
+	}
+
+	// Initialize history buffers
+	for (size_t i = 0; i < HISTORY_LINES; i++) {
+		for (size_t x = 0; x < COLS; x++) {
+			screen_history[i * COLS + x] = vga_entry(' ', terminal_color);
+		}
+	}
+
+	initialized = true;
+
+	terminal_writestring("Terminal initialized\n");
+	// char buf[32];
+	// itoa(history_size, buf, 10);
+	// terminal_writestring(buf);
+	// terminal_writestring(" commands in history\n");
+}
+
+void terminal_render(void) {
 	graphics_clear_screen(0);  // Clear graphics screen to black
-	terminal_buffer = current_graphics_mode.frame_buffer;
-
-	terminal_writestring("Welcome to ChimpOS!\n");
-
+	for (size_t y = 0; y < ROWS; y++) {
+		for (size_t x = 0; x < COLS; x++) {
+			char ch = terminal_buffer[y][x].ch;
+			uint8_t color = terminal_buffer[y][x].color;
+			if (ch != ' ') {
+				graphics_draw_char_8x8(ch, x * 8, y * 8, color);
+			}
+		}
+	}
+	graphics_swap_buffers();
 }
 
 void terminal_initialize_history(void) {
@@ -127,49 +151,69 @@ void terminal_set_bg_color(enum vga_color bg)
 
 void terminal_putentryat(char c, uint8_t color, size_t x, size_t y) 
 {
-	const size_t index = y * VGA_WIDTH + x;
-	// terminal_buffer[index] = vga_entry(c, color);
-	graphics_draw_char_8x8(c, x * 8, y * 8, color);
+	if(x >= COLS || y >= ROWS) {
+        return;
+    }
+
+    terminal_buffer[y][x].ch = c;
+    terminal_buffer[y][x].color = color;
 }
 
-void save_screen_to_history(void) {
-	if (history_size >= HISTORY_LINES) {
-		history_start = (history_start + 1) % HISTORY_LINES;
-	} else {
-		history_size++;
-	}
-	
-	int save_index = (history_start + history_size - 1) % HISTORY_LINES;
-	
-	for (int x = 0; x < VGA_WIDTH; x++) {
-		screen_history[save_index * VGA_WIDTH + x] = terminal_buffer[x];
-	}
+void save_screen_to_history(void)
+{
+    if (history_size >= HISTORY_LINES)
+    {
+        history_start =
+            (history_start + 1) % HISTORY_LINES;
+    }
+    else
+    {
+        history_size++;
+    }
+
+    int save_index =
+        (history_start + history_size - 1)
+        % HISTORY_LINES;
+
+    for (int x = 0; x < COLS; x++)
+    {
+        screen_history[save_index * COLS + x] =
+            vga_entry(
+                terminal_buffer[0][x].ch,
+                terminal_buffer[0][x].color);
+    }
 }
 
-void terminal_scroll() {
-	if (scroll_position == 0) {
-		save_screen_to_history();
-	}
-	
-	for (int y = 0; y < VGA_HEIGHT - 1; y++) {
-		for (int x = 0; x < VGA_WIDTH; x++) {
-			const size_t dest_index = y * VGA_WIDTH + x;
-			const size_t src_index = (y + 1) * VGA_WIDTH + x;
-			terminal_buffer[dest_index] = terminal_buffer[src_index];
-		}
-	}
-	
-	for (int x = 0; x < VGA_WIDTH; x++) {
-		terminal_putentryat(' ', terminal_color, x, VGA_HEIGHT - 1);
-	}
-}
+void terminal_scroll(void)
+{
+    if (scroll_position == 0)
+    {
+        save_screen_to_history();
+    }
 
+    for (int y = 0; y < ROWS - 1; y++)
+    {
+        for (int x = 0; x < COLS; x++)
+        {
+            terminal_buffer[y][x] =
+                terminal_buffer[y + 1][x];
+        }
+    }
+
+    for (int x = 0; x < COLS; x++)
+    {
+        terminal_buffer[ROWS - 1][x].ch = ' ';
+        terminal_buffer[ROWS - 1][x].color = terminal_color;
+    }
+
+    terminal_render();
+}
 // Save the current screen content before scrolling
 void save_current_screen() {
-	for (int y = 0; y < VGA_HEIGHT; y++) {
-		for (int x = 0; x < VGA_WIDTH; x++) {
-			const size_t index = y * VGA_WIDTH + x;
-			current_screen_buffer[index] = terminal_buffer[index];
+	for (int y = 0; y < ROWS; y++) {
+		for (int x = 0; x < COLS; x++) {
+			const size_t index = y * COLS + x;
+			current_screen_buffer[index] = terminal_buffer[y][x].ch | (terminal_buffer[y][x].color << 8);
 		}
 	}
 }
@@ -177,33 +221,35 @@ void save_current_screen() {
 void refresh_screen_from_history() {
 	if (scroll_position == 0) {
 		// Restore the current screen
-		for (int y = 0; y < VGA_HEIGHT; y++) {
-			for (int x = 0; x < VGA_WIDTH; x++) {
-				const size_t index = y * VGA_WIDTH + x;
-				terminal_buffer[index] = current_screen_buffer[index];
+		for (int y = 0; y < ROWS; y++) {
+			for (int x = 0; x < COLS; x++) {
+				terminal_buffer[y][x] = t_cell_entry(current_screen_buffer[y * COLS + x] & 0xFF, (current_screen_buffer[y * COLS + x] >> 8) & 0xFF);
 			}
 		}
+		terminal_render();
 		return;
 	}
 	
 	int available_scroll = (scroll_position > history_size) ? history_size : scroll_position;
 	
-	for (int y = 0; y < VGA_HEIGHT; y++) {
+	for (int y = 0; y < ROWS; y++) {
 		if (y < available_scroll) {
 			int history_line = (history_start + history_size - available_scroll + y) % HISTORY_LINES;
 			
-			for (int x = 0; x < VGA_WIDTH; x++) {
-				terminal_buffer[y * VGA_WIDTH + x] = screen_history[history_line * VGA_WIDTH + x];
+			for (int x = 0; x < COLS; x++) {
+				terminal_buffer[y][x] = t_cell_entry(screen_history[history_line * COLS + x] & 0xFF, (screen_history[history_line * COLS + x] >> 8) & 0xFF);
 			}
 		} else {
 			int src_line = y - available_scroll;
-			if (src_line < VGA_HEIGHT) {
-				for (int x = 0; x < VGA_WIDTH; x++) {
-					terminal_buffer[y * VGA_WIDTH + x] = current_screen_buffer[src_line * VGA_WIDTH + x];
+			if (src_line < ROWS) {
+				for (int x = 0; x < COLS; x++) {
+					terminal_buffer[y][x] = t_cell_entry(current_screen_buffer[src_line * COLS + x] & 0xFF, (current_screen_buffer[src_line * COLS + x] >> 8) & 0xFF);
 				}
 			}
 		}
 	}
+
+	terminal_render();
 }
 
 void terminal_page_up(void) {
@@ -211,7 +257,7 @@ void terminal_page_up(void) {
 		save_current_screen();
 	}
 	
-	int scroll_amount = VGA_HEIGHT / 2;
+	int scroll_amount = ROWS / 2;
 	
 	int max_scroll = history_size - scroll_position;
 	if (scroll_amount > max_scroll) {
@@ -224,17 +270,21 @@ void terminal_page_up(void) {
 	}
 }
 
-void terminal_page_down(void) {
-	if (scroll_position > 0) {
-		int scroll_amount = VGA_HEIGHT / 2;
-		
-		if (scroll_amount > scroll_position) {
-			scroll_amount = scroll_position;
-		}
-		
-		scroll_position -= scroll_amount;
-		refresh_screen_from_history();
-	}
+void terminal_page_down(void)
+{
+    if(scroll_position > 0)
+    {
+        int scroll_amount = ROWS / 2;
+
+        if(scroll_amount > scroll_position)
+        {
+            scroll_amount = scroll_position;
+        }
+
+        scroll_position -= scroll_amount;
+
+        refresh_screen_from_history();
+    }
 }
 
 void terminal_scroll_up(void) {
@@ -285,12 +335,24 @@ void terminal_writestring_colored(const char* data, enum vga_color fg, enum vga_
 
 void terminal_putchar(char c) 
 {
+	if (terminal_row >= ROWS) {
+    	terminal_row = ROWS - 1;
+	}
+
+	if (terminal_column >= COLS) {
+		terminal_column = 0;
+	}
+
+	if (scroll_position > HISTORY_LINES) {
+		terminal_writestring("BAD SCROLL\n");
+		for(;;);
+	}
+
 	if (scroll_position > 0) {
 		scroll_position = 0;
-		for (int y = 0; y < VGA_HEIGHT; y++) {
-			for (int x = 0; x < VGA_WIDTH; x++) {
-				const size_t index = y * VGA_WIDTH + x;
-				terminal_buffer[index] = current_screen_buffer[index];
+		for (int y = 0; y < ROWS; y++) {
+			for (int x = 0; x < COLS; x++) {
+				terminal_buffer[y][x] = t_cell_entry(current_screen_buffer[y * COLS + x] & 0xFF, (current_screen_buffer[y * COLS + x] >> 8) & 0xFF);
 			}
 		}
 	}
@@ -313,7 +375,7 @@ void terminal_putchar(char c)
 						terminal_putentryat(' ', terminal_color, terminal_column, terminal_row);
 					} else if (terminal_row > 0) {
 						terminal_row--;
-						terminal_column = VGA_WIDTH - 1;
+						terminal_column = COLS - 1;
 						terminal_putentryat(' ', terminal_color, terminal_column, terminal_row);
 					}
 				}
@@ -322,7 +384,7 @@ void terminal_putchar(char c)
 		default:
 			{
 				terminal_putentryat(c, terminal_color, terminal_column, terminal_row);
-				if (++terminal_column == VGA_WIDTH) {
+				if (++terminal_column == COLS) {
 					terminal_column = 0;
 					terminal_row++;
 				}
@@ -330,16 +392,16 @@ void terminal_putchar(char c)
 			}
 	}
 
-	if (terminal_row == VGA_HEIGHT) {
-		terminal_row--;
+	if (terminal_row == ROWS) {
+		terminal_row = ROWS - 1;
 		terminal_scroll();
 	}
 	
 	if (scroll_position == 0) {
-		for (int y = 0; y < VGA_HEIGHT; y++) {
-			for (int x = 0; x < VGA_WIDTH; x++) {
-				const size_t index = y * VGA_WIDTH + x;
-				current_screen_buffer[index] = terminal_buffer[index];
+		for (int y = 0; y < ROWS; y++) {
+			for (int x = 0; x < COLS; x++) {
+				const size_t index = y * COLS + x;
+				current_screen_buffer[index] = terminal_buffer[index]->ch | (terminal_buffer[index]->color << 8);
 			}
 		}
 	}
@@ -424,20 +486,26 @@ void terminal_write(const char* data, size_t size)
 
 void terminal_writestring(const char* data) 
 {
+	if (!initialized) {
+		return;
+	} 
 	terminal_write(data, strlen(data));
-	graphics_swap_buffers();
+	terminal_render();
 }
 
 void terminal_clear(void) {
 	terminal_row = 0;
 	terminal_column = 0;
 	scroll_position = 0;
-	for (size_t y = 0; y < VGA_HEIGHT; y++) {
-		for (size_t x = 0; x < VGA_WIDTH; x++) {
-			const size_t index = y * VGA_WIDTH + x;
-			terminal_buffer[index] = vga_entry(' ', terminal_color);
+	for (size_t y = 0; y < ROWS; y++) {
+		for (size_t x = 0; x < COLS; x++) {
+			const size_t index = y * COLS + x;
+			terminal_buffer[y][x].ch = ' ';
+			terminal_buffer[y][x].color = terminal_color;
 		}
 	}
 	prompt_position.row = 0;
 	prompt_position.column = 0;
 }
+
+

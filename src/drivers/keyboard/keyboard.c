@@ -105,12 +105,14 @@ void read_line(char* buffer, int max_len) {
                     // Optional: Clear the character on screen
                     terminal_putchar(' ');
                     terminal_putchar('\b');
+                    terminal_render();
                 } else if (c) {
                     if (shift_pressed) {
                         c = char_to_upper(c);
                     }
                     buffer[i++] = c;
                     terminal_putchar(c);
+                    terminal_render();
                 }
             }
         }
